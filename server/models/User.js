@@ -1,9 +1,18 @@
 const mongoose = require("mongoose")
 
 const userScehma = new mongoose.Schema({
-    username: String,
-    password: String,
-    refreshTokenVersion: Number,
+    username: {
+        type: String,
+        required: true,
+    },
+    password: {
+        type: String,
+        required: true,
+    },
+    refreshTokenVersion: {
+        type: Number,
+        default: 0,
+    },
     createdAt: {
         type: Date,
         immutable: true,

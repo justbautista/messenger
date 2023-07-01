@@ -10,12 +10,16 @@ app.use(cors())
 app.use(express.json())
 app.use(cookieParser())
 
-try {
-    mongoose.connect(process.env.MONGO_DB_URI)
-    console.log("Database connection SUCCESSFUL")
-} catch (err) {
-    console.error("Database connection FAILED: " + err)
+const connectDB = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_DB_URI)
+        console.log("Database connection SUCCESSFUL")
+    } catch (err) {
+        console.error("Database connection FAILED: " + err)
+    }
 }
+
+connectDB()
 
 const authRouter = require("./routes/authRouter")
 
