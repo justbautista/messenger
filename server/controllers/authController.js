@@ -3,7 +3,7 @@ const User = require("../models/User")
 const {
 	generateAccessToken,
 	generateRefreshToken,
-	verifyAccessToken,
+	setTokens,
 	verifyRefreshToken,
 } = require("../helpers/authHelpers")
 
@@ -13,31 +13,26 @@ const register = async (req, res) => {
 		const userExists = await User.exists({ username: username })
 
 		if (userExists) {
-			return res.send("User exists")
+			return res
+				.status(409)
+				.send({ ok: false, message: "User already exists" })
 		}
 
 		const hash = await bcrypt.hash(password, 10)
 		await User.create({ username: username, password: hash })
 
 		const accessToken = generateAccessToken(username)
-		const refreshToken = generateRefreshToken(username)
+		const refreshToken = generateRefreshToken(username, 0)
+		setTokens(res, accessToken, refreshToken)
 
-		res.cookie("refreshToken", refreshToken, { httpOnly: true })
-		res.header("Authorization", `Bearer ${accessToken}`)
-
-		return res.send({ ok: true, message: `User ${username} created!` })
+		return res.send({ ok: true, message: "User created!" })
 	} catch (err) {
 		return res.status(500).send({
 			ok: false,
+			message: "Problem creating user",
 			error: err,
 		})
 	}
-	// try {
-	//     const v = verifyAccessToken("eJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QzIiwidG9rZW5UeXBlIjoiYWNjZXNzIiwiaWF0IjoxNjg4MTY1MjYyLCJleHAiOjE2ODgxNjYxNjJ9.cOBczBiUdDA460oc6dEKfvBj1dGeMknRK__Bdz8WvS4")
-	//     res.send(v)
-	// } catch (err) {
-	//     res.send({ ok: false, error: err })
-	// }
 }
 
 const login = async (req, res) => {
@@ -46,39 +41,99 @@ const login = async (req, res) => {
 		const user = await User.findOne({ username: username })
 
 		if (!user) {
-			return res.send("User does not exist")
+			return res
+				.status(404)
+				.send({ ok: false, message: "User not found" })
 		}
 
 		const isValid = await bcrypt.compare(password, user["password"])
 
 		if (!isValid) {
-			return res.send("Wrong password")
+			return res
+				.status(401)
+				.send({ ok: false, message: "Invalid password" })
 		}
 
-		const accessToken = generateAccessToken(username)
-		const refreshToken = generateRefreshToken(username)
+		await User.updateOne(
+			{ username: username },
+			{ $inc: { refreshTokenVersion: 1 } }
+		)
 
-		res.cookie("refreshToken", refreshToken, { httpOnly: true })
-		res.header("Authorization", `Bearer ${accessToken}`)
-		return res.send({ ok: true, message: `User ${username} logged in!` })
+		const accessToken = generateAccessToken(username)
+		const refreshToken = generateRefreshToken(
+			username,
+			user["refreshTokenVersion"] + 1
+		)
+		setTokens(res, accessToken, refreshToken)
+
+		return res.send({ ok: true, message: "User logged in!" })
 	} catch (err) {
-		return res.send({ ok: false, error: err.message })
+		return res.status(500).send({
+			ok: false,
+			message: "Problem logging in user",
+			error: err,
+		})
 	}
 }
 
 const logout = async (req, res) => {
 	try {
 		const { username } = req.body
-		const user = await User.findOneAndUpdate(
+		await User.updateOne(
 			{ username: username },
 			{ $inc: { refreshTokenVersion: 1 } }
 		)
 
-		res.cookie("refreshToken", "", { httpOnly: true })
-		return res.send(`Successfully logged ${user.username} out!`)
+		res.cookie("refreshToken", "", {
+			httpOnly: true,
+			path: "/v1/auth/refreshTokenPair",
+			expires: new Date(0),
+		})
+		return res.send({ ok: true, message: "Successfully logged out!" })
 	} catch (err) {
-		return res.send({ ok: false, error: err.message })
+		return res.status(500).send({
+			ok: false,
+			message: "Problem logging out user",
+			error: err,
+		})
 	}
 }
 
-module.exports = { register, login, logout }
+const refreshTokenPair = async (req, res) => {
+	const refreshToken = req.cookies["refreshToken"]
+
+	try {
+		const verifiedRefresh = verifyRefreshToken(refreshToken)
+
+		const user = await User.findOneAndUpdate(
+			{ username: verifiedRefresh["username"] },
+			{ $inc: { refreshTokenVersion: 1 } }
+		)
+
+		if (user["refreshTokenVersion"] !== verifiedRefresh["tokenVersion"]) {
+			return res
+				.status(401)
+				.send({ ok: false, message: "Refresh token invalid" })
+		}
+
+		const newRefreshToken = generateRefreshToken(
+			verifiedRefresh["username"],
+			user["refreshTokenVersion"] + 1
+		)
+		const newAccessToken = generateAccessToken(verifiedRefresh["username"])
+		setTokens(res, newAccessToken, newRefreshToken)
+
+		return res.send({
+			ok: true,
+			message: "Successfully refreshed token pair!",
+		})
+	} catch (err) {
+		return res.status(500).send({
+			ok: false,
+			message: "Problem refreshing token pair",
+			error: err,
+		})
+	}
+}
+
+module.exports = { register, login, logout, refreshTokenPair }
