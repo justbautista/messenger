@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken")
+const User = require("../models/User")
 
 const generateAccessToken = (username) => {
 	return jwt.sign(
@@ -34,15 +35,54 @@ const verifyRefreshToken = (token) => {
 }
 
 const setTokens = (res, accessToken, refreshToken) => {
-	res.cookie("refreshToken", refreshToken, { httpOnly: true, path: "/v1/auth/refreshTokenPair" })
+	res.cookie("refreshToken", refreshToken, {
+		httpOnly: true,
+	})
 	res.header("Authorization", `Bearer ${accessToken}`)
 }
 
-const checkAuth = (req, res, next) => {
+const checkAuth = async (req, res, next) => {
 	const accessToken = req.headers["authorization"]
-    
+	const refreshToken = req.cookies["refreshToken"]
 
-	next()
+	try {
+		verifyAccessToken(accessToken.split(" ")[1])
+		// res.send({ ok: true, message: "Access token verified" })
+		next()
+	} catch (err) {
+		try {
+			const verifiedRefresh = verifyRefreshToken(refreshToken)
+
+			const user = await User.findOneAndUpdate(
+				{ username: verifiedRefresh["username"] },
+				{ $inc: { refreshTokenVersion: 1 } }
+			)
+
+			if (user["refreshTokenVersion"] !== verifiedRefresh["tokenVersion"]) {
+				return res
+					.status(401)
+					.send({ ok: false, message: "Refresh token invalid" })
+			}
+
+			const newRefreshToken = generateRefreshToken(
+				verifiedRefresh["username"],
+				user["refreshTokenVersion"] + 1
+			)
+			const newAccessToken = generateAccessToken(
+				verifiedRefresh["username"]
+			)
+			setTokens(res, newAccessToken, newRefreshToken)
+
+			// res.send({ ok: true, message: "Successfully refreshed token pair!" })
+			next()
+		} catch (err) {
+			return res.status(404).send({
+				ok: false,
+				message: "Refresh token invalid",
+				error: err,
+			})
+		}
+	}
 }
 
 module.exports = {
@@ -51,4 +91,5 @@ module.exports = {
 	verifyAccessToken,
 	verifyRefreshToken,
 	setTokens,
+	checkAuth,
 }

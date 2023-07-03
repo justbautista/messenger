@@ -86,7 +86,6 @@ const logout = async (req, res) => {
 
 		res.cookie("refreshToken", "", {
 			httpOnly: true,
-			path: "/v1/auth/refreshTokenPair",
 			expires: new Date(0),
 		})
 		return res.send({ ok: true, message: "Successfully logged out!" })
@@ -99,41 +98,42 @@ const logout = async (req, res) => {
 	}
 }
 
-const refreshTokenPair = async (req, res) => {
-	const refreshToken = req.cookies["refreshToken"]
-
-	try {
-		const verifiedRefresh = verifyRefreshToken(refreshToken)
-
-		const user = await User.findOneAndUpdate(
-			{ username: verifiedRefresh["username"] },
-			{ $inc: { refreshTokenVersion: 1 } }
-		)
-
-		if (user["refreshTokenVersion"] !== verifiedRefresh["tokenVersion"]) {
-			return res
-				.status(401)
-				.send({ ok: false, message: "Refresh token invalid" })
-		}
-
-		const newRefreshToken = generateRefreshToken(
-			verifiedRefresh["username"],
-			user["refreshTokenVersion"] + 1
-		)
-		const newAccessToken = generateAccessToken(verifiedRefresh["username"])
-		setTokens(res, newAccessToken, newRefreshToken)
-
-		return res.send({
-			ok: true,
-			message: "Successfully refreshed token pair!",
-		})
-	} catch (err) {
-		return res.status(500).send({
-			ok: false,
-			message: "Problem refreshing token pair",
-			error: err,
-		})
-	}
+const test = (req, res) => {
+    return res.send({ message: "went through" })
 }
 
-module.exports = { register, login, logout, refreshTokenPair }
+// const refreshTokenPair = async (req, res) => {
+// 	const refreshToken = req.cookies["refreshToken"]
+
+// 	try {
+// 		const verifiedRefresh = verifyRefreshToken(refreshToken)
+
+// 		const user = await User.findOneAndUpdate(
+// 			{ username: verifiedRefresh["username"] },
+// 			{ $inc: { refreshTokenVersion: 1 } }
+// 		)
+
+// 		if (user["refreshTokenVersion"] !== verifiedRefresh["tokenVersion"]) {
+// 			return res
+// 				.status(401)
+// 				.send({ ok: false, message: "Refresh token invalid" })
+// 		}
+
+// 		const newRefreshToken = generateRefreshToken(
+// 			verifiedRefresh["username"],
+// 			user["refreshTokenVersion"] + 1
+// 		)
+// 		const newAccessToken = generateAccessToken(verifiedRefresh["username"])
+// 		setTokens(res, newAccessToken, newRefreshToken)
+
+// 		return res.send({ ok: true, message: "Successfully refreshed token pair!" })
+// 	} catch (err) {
+// 		return res.status(500).send({
+// 			ok: false,
+// 			message: "Problem refreshing token pair",
+// 			error: err,
+// 		})
+// 	}
+// }
+
+module.exports = { register, login, logout, test }
