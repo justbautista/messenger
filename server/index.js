@@ -6,7 +6,7 @@ const mongoose = require("mongoose")
 
 const app = express()
 
-app.use(cors())
+app.use(cors({ origin: process.env.CLIENT_URI, credentials: true }))
 app.use(express.json())
 app.use(cookieParser())
 
@@ -22,8 +22,10 @@ const connectDB = async () => {
 connectDB()
 
 const authRouter = require("./routes/authRouter")
+const chatRouter = require("./routes/chatRouter")
 
 app.use("/v1/auth", authRouter)
+app.use("/v1/chats", chatRouter)
 
 const port = process.env.PORT || 8000
 app.listen(port, () => {

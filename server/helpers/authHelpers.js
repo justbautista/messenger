@@ -34,11 +34,30 @@ const verifyRefreshToken = (token) => {
 	return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET)
 }
 
-const setTokens = (res, accessToken, refreshToken) => {
-	res.cookie("refreshToken", refreshToken, {
-		httpOnly: true,
-	})
-	res.header("Authorization", `Bearer ${accessToken}`)
+const setTokens = (res, accessToken, refreshToken, expire = false) => {
+	if (expire) {
+		res.cookie("refreshToken", "", {
+			httpOnly: true,
+			sameSite: "Strict",
+			expires: new Date(0),
+		})
+	} else {
+		res.cookie("refreshToken", refreshToken, {
+			httpOnly: true,
+			sameSite: "Strict",
+		})
+		res.header("Authorization", `Bearer ${accessToken}`)
+	}
+}
+
+const generateJsonResponse = (ok, message, custom = {}) => {
+	const generalResponse = {
+		ok: ok,
+		message: message,
+	}
+
+	const fullResponse = { ...generalResponse, ...custom }
+	return fullResponse
 }
 
 const checkAuth = async (req, res, next) => {
@@ -46,7 +65,8 @@ const checkAuth = async (req, res, next) => {
 	const refreshToken = req.cookies["refreshToken"]
 
 	try {
-		verifyAccessToken(accessToken.split(" ")[1])
+		const verified = verifyAccessToken(accessToken.split(" ")[1])
+		req.body["username"] = verified["username"]
 		// res.send({ ok: true, message: "Access token verified" })
 		next()
 	} catch (err) {
@@ -58,10 +78,12 @@ const checkAuth = async (req, res, next) => {
 				{ $inc: { refreshTokenVersion: 1 } }
 			)
 
-			if (user["refreshTokenVersion"] !== verifiedRefresh["tokenVersion"]) {
+			if (
+				user["refreshTokenVersion"] !== verifiedRefresh["tokenVersion"]
+			) {
 				return res
 					.status(401)
-					.send({ ok: false, message: "Refresh token invalid" })
+					.send(generateJsonResponse(false, "Refresh token invalid"))
 			}
 
 			const newRefreshToken = generateRefreshToken(
@@ -72,15 +94,18 @@ const checkAuth = async (req, res, next) => {
 				verifiedRefresh["username"]
 			)
 			setTokens(res, newAccessToken, newRefreshToken)
+			req.body["username"] = verifiedRefresh["username"]
 
 			// res.send({ ok: true, message: "Successfully refreshed token pair!" })
 			next()
 		} catch (err) {
-			return res.status(404).send({
-				ok: false,
-				message: "Refresh token invalid",
-				error: err,
-			})
+			return res
+				.status(404)
+				.send(
+					generateJsonResponse(false, "Refresh token invalid", {
+						error: err,
+					})
+				)
 		}
 	}
 }
@@ -88,8 +113,7 @@ const checkAuth = async (req, res, next) => {
 module.exports = {
 	generateAccessToken,
 	generateRefreshToken,
-	verifyAccessToken,
-	verifyRefreshToken,
 	setTokens,
 	checkAuth,
+	generateJsonResponse,
 }
