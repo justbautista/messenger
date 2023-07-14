@@ -1,12 +1,12 @@
 const express = require("express")
 const router = express.Router()
 const { checkAuth } = require("../helpers/authHelpers")
-const { createChat, getChatList } = require("../controllers/chatController")
+const { createChat, getChatList, getMessages, deleteChat } = require("../controllers/chatController")
 
 router.post("/", checkAuth, createChat)
 router.get("/list", checkAuth, getChatList) // gets the chats the user is a part of, the sidebar
-router.post("/:id", checkAuth) // get messages from chat, req has number of messages already loaded starting from 0 (increases on client)
-router.delete("/:id", checkAuth)
+router.get("/:chatId/:msgsLoaded", checkAuth, getMessages) // get messages from chat, req has number of messages already loaded starting from 0 (increases on client)
+router.delete("/:chatId", checkAuth, deleteChat)
 
 module.exports = router
 

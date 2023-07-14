@@ -21,7 +21,7 @@ const generateRefreshToken = (username, tokenVersion) => {
 		},
 		process.env.REFRESH_TOKEN_SECRET,
 		{
-			expiresIn: "1h",
+			expiresIn: "7d",
 		}
 	)
 }
@@ -66,6 +66,14 @@ const checkAuth = async (req, res, next) => {
 
 	try {
 		const verified = verifyAccessToken(accessToken.split(" ")[1])
+		const user = await User.exists({ username: verified["username"] })
+
+		if (!user) {
+			return res
+				.status(404)
+				.send(generateJsonResponse(false, "User not found"))
+		}
+
 		req.body["username"] = verified["username"]
 		// res.send({ ok: true, message: "Access token verified" })
 		next()
@@ -77,6 +85,14 @@ const checkAuth = async (req, res, next) => {
 				{ username: verifiedRefresh["username"] },
 				{ $inc: { refreshTokenVersion: 1 } }
 			)
+
+			if (!user) {
+				return res
+					.status(404)
+					.send(
+						generateJsonResponse(false, "User in token not found")
+					)
+			}
 
 			if (
 				user["refreshTokenVersion"] !== verifiedRefresh["tokenVersion"]
@@ -99,13 +115,11 @@ const checkAuth = async (req, res, next) => {
 			// res.send({ ok: true, message: "Successfully refreshed token pair!" })
 			next()
 		} catch (err) {
-			return res
-				.status(404)
-				.send(
-					generateJsonResponse(false, "Refresh token invalid", {
-						error: err,
-					})
-				)
+			return res.status(404).send(
+				generateJsonResponse(false, "Refresh token invalid", {
+					error: err,
+				})
+			)
 		}
 	}
 }
