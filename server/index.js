@@ -23,9 +23,11 @@ connectDB()
 
 const authRouter = require("./routes/authRouter")
 const chatRouter = require("./routes/chatRouter")
+const userRouter = require("./routes/userRouter")
 
 app.use("/v1/auth", authRouter)
 app.use("/v1/chats", chatRouter)
+app.use("/v1/users", userRouter)
 
 const port = process.env.PORT || 8000
 app.listen(port, () => {

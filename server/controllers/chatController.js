@@ -70,7 +70,7 @@ const getChatList = async (req, res) => {
 const getMessages = async (req, res) => {
 	try {
 		const { chatId } = req.params
-		const msgsLoaded = parseInt(req.params["msgsLoaded"])
+		const msgsLoaded = parseInt(req.query["msgsLoaded"])
 		const chat = await Chat.findById(chatId)
 
 		if (!chat) {
