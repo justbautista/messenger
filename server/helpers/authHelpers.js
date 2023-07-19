@@ -130,4 +130,5 @@ module.exports = {
 	setTokens,
 	checkAuth,
 	generateJsonResponse,
+    verifyAccessToken,
 }
