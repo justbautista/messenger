@@ -27,13 +27,11 @@ const register = async (req, res) => {
 
 		return res.send(generateJsonResponse(true, "User created!"))
 	} catch (err) {
-		return res
-			.status(500)
-			.send(
-				generateJsonResponse(false, "Problem creating user", {
-					error: err,
-				})
-			)
+		return res.status(500).send(
+			generateJsonResponse(false, "Problem creating user", {
+				error: err,
+			})
+		)
 	}
 }
 
@@ -56,27 +54,26 @@ const login = async (req, res) => {
 				.send(generateJsonResponse(false, "Invalid password"))
 		}
 
+        const newVersion = user["refreshTokenVersion"] + 1
+
 		await User.updateOne(
 			{ username: username },
-			{ $inc: { refreshTokenVersion: 1 } }
+			{ $set: { refreshTokenVersion: newVersion } }
 		)
 
 		const accessToken = generateAccessToken(username)
 		const refreshToken = generateRefreshToken(
 			username,
-			user["refreshTokenVersion"] + 1
+			newVersion
 		)
 		setTokens(res, accessToken, refreshToken)
-
 		return res.send(generateJsonResponse(true, "User logged in!"))
 	} catch (err) {
-		return res
-			.status(500)
-			.send(
-				generateJsonResponse(false, "Problem logging in user", {
-					error: err,
-				})
-			)
+		return res.status(500).send(
+			generateJsonResponse(false, "Problem logging in user", {
+				error: err,
+			})
+		)
 	}
 }
 
@@ -91,18 +88,16 @@ const logout = async (req, res) => {
 
 		return res.send(generateJsonResponse(true, "Successfully logged out!"))
 	} catch (err) {
-		return res
-			.status(500)
-			.send(
-				generateJsonResponse(false, "Problem logging out user", {
-					error: err,
-				})
-			)
+		return res.status(500).send(
+			generateJsonResponse(false, "Problem logging out user", {
+				error: err,
+			})
+		)
 	}
 }
 
-const test = (req, res) => {
-	return res.send(generateJsonResponse(true, "test logging with function"))
+const isLoggedIn = (req, res) => {
+	return res.send(generateJsonResponse(true, "User is logged in!"))
 }
 
-module.exports = { register, login, logout, test }
+module.exports = { register, login, logout, isLoggedIn }

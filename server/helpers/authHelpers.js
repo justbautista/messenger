@@ -63,7 +63,7 @@ const generateJsonResponse = (ok, message, custom = {}) => {
 const checkAuth = async (req, res, next) => {
 	const accessToken = req.headers["authorization"]
 	const refreshToken = req.cookies["refreshToken"]
-
+	
 	try {
 		const verified = verifyAccessToken(accessToken.split(" ")[1])
 		const user = await User.exists({ username: verified["username"] })
@@ -81,10 +81,9 @@ const checkAuth = async (req, res, next) => {
 		try {
 			const verifiedRefresh = verifyRefreshToken(refreshToken)
 
-			const user = await User.findOneAndUpdate(
-				{ username: verifiedRefresh["username"] },
-				{ $inc: { refreshTokenVersion: 1 } }
-			)
+			const user = await User.findOne({
+				username: verifiedRefresh["username"],
+			})
 
 			if (!user) {
 				return res
@@ -102,16 +101,22 @@ const checkAuth = async (req, res, next) => {
 					.send(generateJsonResponse(false, "Refresh token invalid"))
 			}
 
+			const newVersion = user["refreshTokenVersion"] + 1
+
 			const newRefreshToken = generateRefreshToken(
 				verifiedRefresh["username"],
-				user["refreshTokenVersion"] + 1
+				newVersion
 			)
 			const newAccessToken = generateAccessToken(
 				verifiedRefresh["username"]
 			)
 			setTokens(res, newAccessToken, newRefreshToken)
 			req.body["username"] = verifiedRefresh["username"]
-
+            
+			await User.updateOne(
+				{ username: verifiedRefresh["username"] },
+				{ $set: { refreshTokenVersion: newVersion } }
+			)
 			// res.send({ ok: true, message: "Successfully refreshed token pair!" })
 			next()
 		} catch (err) {
@@ -130,5 +135,5 @@ module.exports = {
 	setTokens,
 	checkAuth,
 	generateJsonResponse,
-    verifyAccessToken,
+	verifyAccessToken,
 }

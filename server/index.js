@@ -17,7 +17,7 @@ const io = new Server(server, {
 	},
 })
 
-app.use(cors({ origin: process.env.CLIENT_URI, credentials: true }))
+app.use(cors({ origin: process.env.CLIENT_URI, credentials: true, exposedHeaders: ["Authorization"] }))
 app.use(express.json())
 app.use(cookieParser())
 

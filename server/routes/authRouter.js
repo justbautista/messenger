@@ -4,13 +4,13 @@ const {
 	register,
 	login,
 	logout,
-    test
+	isLoggedIn,
 } = require("../controllers/authController")
 const { checkAuth } = require("../helpers/authHelpers")
 
 router.post("/register", register)
 router.post("/login", login)
 router.post("/logout", checkAuth, logout)
-router.post("/test", checkAuth, test)
+router.post("/isLoggedIn", checkAuth, isLoggedIn)
 
 module.exports = router
