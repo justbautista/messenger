@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import api from "../helpers/axiosConfig"
-import { generateAxiosError, setAccessToken } from "../helpers/helpers"
+import { generateAxiosError } from "../helpers/helpers"
 
 export default function Login() {
     // register and login will be same style page, probably put display name into register
@@ -9,14 +9,23 @@ export default function Login() {
 
     const handleSubmit = async (event) => {
         event.preventDefault()
-
         try {
-            const response = await api.post("/auth/login", { username: username, password: password })
-            setAccessToken(response.headers["Authorization"])
+            await api.post("/auth/login", { username: username, password: password }) 
         } catch (err) {
             console.error(generateAxiosError(err))
         }
     }
+
+    const logout = async (event) => {
+        event.preventDefault()
+        try {
+            await api.post("/auth/logout")
+        } catch (err) {
+            console.error(generateAxiosError(err))
+        }
+    }
+
+    // TODO: finish login screen and loader screen doesnt seem to work properly
 
 	return (
 		<div>
@@ -35,9 +44,10 @@ export default function Login() {
                 </div>
                 <div>
                     <button type="submit">Login</button>
-                    <a>Register here</a>
+                    <p>Register here</p>
                 </div>
             </form>
+            <button type="button" onClick={logout}>Log Out</button>
 		</div>
 	)
 }

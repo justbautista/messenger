@@ -1,11 +1,6 @@
-import io from "socket.io-client"
 import { useState, useEffect } from "react"
 import api from "../helpers/axiosConfig"
-import {
-	setAccessToken,
-	getAccessToken,
-	generateAxiosError,
-} from "../helpers/helpers"
+import { generateAxiosError } from "../helpers/helpers"
 import LoaderScreen from "./LoaderScreen"
 import HomeScreen from "./HomeScreen"
 import LoginScreen from "./LoginScreen"
@@ -19,18 +14,12 @@ import LoginScreen from "./LoginScreen"
 
 export default function App() {
 	const [isLoggedIn, setIsLoggedIn] = useState(false)
-	const [loading, setLoading] = useState(false)
+	const [loading, setLoading] = useState(true)
 
 	useEffect(() => {
 		const checkIfLoggedIn = async () => {
 			try {
-				api.defaults.headers.common["Authorization"] = getAccessToken()
-				const response = await api.post("/auth/isLoggedIn")
-                
-                if (response.headers["authorization"]) {
-                    setAccessToken(response.headers["authorization"])
-                }
-                
+				await api.post("/auth/isLoggedIn")
 				setIsLoggedIn(true)
 			} catch (err) {
 				console.error(generateAxiosError(err))
