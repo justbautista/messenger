@@ -17,6 +17,7 @@ api.interceptors.response.use((response) => {
     if (response.headers["authorization"]) {
         setAccessToken(response.headers["authorization"])
     }
+    return response
 }, (error) => {
     return Promise.reject(error)
 })

@@ -42,7 +42,7 @@ app.use("/v1/users", userRouter)
 
 io.use(async (socket, next) => {
 	try {
-		const verified = verifyAccessToken(socket.handshake.auth["token"])
+		const verified = verifyAccessToken(socket.handshake.auth["token"].split(" ")[1])
 		const user = await User.exists({ username: verified["username"] })
 
 		if (user) {
@@ -71,6 +71,8 @@ io.on("connection", (socket) => {
 	socket.on("leave_room", (data) => {
 		socket.leave(data)
 	})
+
+    socket.on("test", (data) => {socket.emit("receive_message", data)})
 })
 
 const port = process.env.PORT || 8000

@@ -3,7 +3,7 @@ import api from "../helpers/axiosConfig"
 import { generateAxiosError } from "../helpers/helpers"
 import { Link, useNavigate } from "react-router-dom"
 
-export default function RegisterPage() {
+export default function RegisterPage({ setIsLoggedIn }) {
 	const [username, setUsername] = useState("")
 	const [password, setPassword] = useState("")
 	const navigate = useNavigate()
@@ -15,7 +15,7 @@ export default function RegisterPage() {
 				username: username,
 				password: password,
 			})
-			setPassword("")
+			setIsLoggedIn(true)
 			navigate("/")
 		} catch (err) {
 			console.error(generateAxiosError(err))
@@ -50,7 +50,7 @@ export default function RegisterPage() {
 				</div>
 				<div>
 					<button type="submit">Register</button>
-					<Link to="/login">Login Here</Link>
+					<Link to="/register">Login Here</Link>
 				</div>
 			</form>
 		</div>

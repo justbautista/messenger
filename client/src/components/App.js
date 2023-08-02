@@ -36,13 +36,13 @@ export default function App() {
 	return (
 		<div className="App">
 			<Router>
-				<Routes>
-					<Route element={<PrivateRoutes isLoggedIn={isLoggedIn} />}>
-						<Route path="/" element={<HomePage />} />
+				<Routes>  
+                    <Route element={<PrivateRoutes isLoggedIn={ isLoggedIn } />}>
+						<Route path="/" element={<HomePage setIsLoggedIn={ setIsLoggedIn }/>} />
 					</Route>
-					<Route path="/login" element={<LoginPage />} />
-					<Route path="/register" element={<RegisterPage />} />
-					<Route path="*" element={<NotFoundPage />} />
+                    <Route path="/login" element={<LoginPage setIsLoggedIn={ setIsLoggedIn }/>} />
+                    <Route path="/register" element={<RegisterPage setIsLoggedIn={ setIsLoggedIn }/>} />
+                    <Route path="*" element={<NotFoundPage />} />
 				</Routes>
 			</Router>
 		</div>

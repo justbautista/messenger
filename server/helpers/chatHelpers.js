@@ -9,7 +9,7 @@ const formatChatList = (chatList) => {
 				chatName: chat["chatName"],
 				chatId: chat["_id"].toString(),
 				updatedAt: chat["updatedAt"],
-				latestMessage: chat["messages"][0],
+				latestMessage: chat["messages"][0] || "No messages",
 			}
 
 			return formattedChat

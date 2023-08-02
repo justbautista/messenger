@@ -3,7 +3,7 @@ import api from "../helpers/axiosConfig"
 import { generateAxiosError } from "../helpers/helpers"
 import { Link, useNavigate } from "react-router-dom"
 
-export default function LoginPage() {
+export default function LoginPage({ setIsLoggedIn }) {
 	const [username, setUsername] = useState("")
 	const [password, setPassword] = useState("")
 	const navigate = useNavigate()
@@ -15,7 +15,8 @@ export default function LoginPage() {
 				username: username,
 				password: password,
 			})
-			setPassword("")
+            setPassword("")
+			setIsLoggedIn(true)
 			navigate("/")
 		} catch (err) {
 			console.error(generateAxiosError(err))
@@ -24,7 +25,7 @@ export default function LoginPage() {
 
 	return (
 		<div>
-			<form onSubmit={handleSubmit}>
+			<form onSubmit={ handleSubmit }>
 				<h1>Login</h1>
 				<div>
 					<label htmlFor="username">Username</label>
