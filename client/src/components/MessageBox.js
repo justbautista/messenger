@@ -4,16 +4,10 @@ import { generateAxiosError } from "../helpers/helpers"
 import { useChat } from "../contexts/chatContext"
 
 export default function MessageBox() {
-	const {
-		selectedChat,
-		messageStore,
-		addToMessageStore,
-		findChat,
-		addToMessageBox,
-	} = useChat()
-    const [currentMessages, setCurrentMessages] = useState({})
+	const { selectedChat, messageStore, updateMessageStore } = useChat()
+	const [currentMessages, setCurrentMessages] = useState({})
 
-    /*
+	/*
         currentMessages
         {
             chatId: chatId,
@@ -23,7 +17,7 @@ export default function MessageBox() {
         messageStore
         {
             chatId: {
-                messagesObject: messagesObject
+                messages: messagesObject
             },
             ...
         }
@@ -36,61 +30,70 @@ export default function MessageBox() {
 					return
 				}
 
-				const chat = findChat(selectedChat)
+                if (currentMessages["messages"]) {
+                    updateMessageStore(selectedChat, currentMessages["messages"])
+                }
 
-                // if no chat in message store, fetch it and add to message store
-				if (!chat) {
+				// if no chat in message store, fetch it and add to message store
+				if (!messageStore[selectedChat]) {
 					const response = await api.get(
 						`/chats/${selectedChat}/messages`,
 						{ params: { msgsLoaded: 0 } }
 					)
 
-					addToMessageStore(selectedChat, response.data["messages"])
-                    return
+					setCurrentMessages({
+						chatId: selectedChat,
+						messages: response.data["messages"],
+					})
+				} else {
+					// if there is a chat, fetch from message store
+					setCurrentMessages({
+						chatId: selectedChat,
+						messages: messageStore[selectedChat],
+					})
 				}
-
-                // if there is a chat, fetch from message store
-                console.log(chat)
 			} catch (err) {
 				console.error(generateAxiosError(err))
 			}
 		}
 
 		getMessages()
-	}, [selectedChat, messageStore])
+	}, [selectedChat])
 
-	const loadMoreMessages = async (chatId) => {
-		const chat = findChat(chatId)
-        
-        // TODO: have a check for if allmessagesareloaded for the messagebox, this only works for the messageStore
-		if (chat["messages"]["allMessagesLoaded"]) {
-			return
-		}
+    // saves to messageStore when chat changes
+    // selectedChat > messageStore  
+    // 
 
-		const response = await api.get(`/chats/${selectedChat}/messages`, {
-			params: { msgsLoaded: chat["messages"]["totalMessagesLoaded"] },
-		})
+	// const loadMoreMessages = async (chatId) => {
+	// 	const chat = findChat(chatId)
 
-		addToMessageBox(
-			chatId,
-			response.data["messages"]["messages"],
-			response.data["messages"]["totalMessagesLoaded"]
-		)
-	}
+	// 	// TODO: have a check for if allmessagesareloaded for the messagebox, this only works for the messageStore
+	// 	if (chat["messages"]["allMessagesLoaded"]) {
+	// 		return
+	// 	}
 
-    // TODO: display messages, have a conditional rendering load more messages button, implement new state for messagebox
+	// 	const response = await api.get(`/chats/${selectedChat}/messages`, {
+	// 		params: { msgsLoaded: chat["messages"]["totalMessagesLoaded"] },
+	// 	})
+
+	// 	addToMessageBox(
+	// 		chatId,
+	// 		response.data["messages"]["messages"],
+	// 		response.data["messages"]["totalMessagesLoaded"]
+	// 	)
+	// }
+
+	// TODO: display messages, have a conditional rendering load more messages button, implement new state for messagebox
 	return (
 		<div>
-			{messageStore.length > 0 ? (
-				messageStore.map((chat) => (
-					<div key={chat["chatId"]}>
-						<p>---------------</p>
-						<p>{chat["chatId"]}</p>
-						<p>---------------</p>
-					</div>
-				))
+			{currentMessages["messages"] ? (
+                <div>
+                    <p>{currentMessages["chatId"]}</p>
+                    <p>{currentMessages["messages"]["allMessagesLoaded"]}</p>
+                    <p>{currentMessages["messages"]["totalMessagesLoaded"]}</p>
+                </div>
 			) : (
-				<div>Nothing in store</div>
+				<p>Loading messages</p>
 			)}
 		</div>
 	)
