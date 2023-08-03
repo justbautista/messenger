@@ -56,7 +56,7 @@ export default function MessageBox() {
 				console.error(generateAxiosError(err))
 			}
 		}
-
+        // new code
 		getMessages()
 	}, [selectedChat])
 
