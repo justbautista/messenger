@@ -8,28 +8,12 @@ import RegisterPage from "./RegisterPage"
 import NotFoundPage from "./NotFoundPage"
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import PrivateRoutes from "./PrivateRoutes"
+import { useAuth } from "../contexts/AuthContext"
 
 export default function App() {
-	const [isLoggedIn, setIsLoggedIn] = useState(false)
-	const [loading, setLoading] = useState(true)
+    const { authLoading } = useAuth()
 
-	useEffect(() => {
-		const checkIfLoggedIn = async () => {
-			try {
-				await api.post("/auth/isLoggedIn")
-				setIsLoggedIn(true)
-			} catch (err) {
-				console.error(generateAxiosError(err))
-				setIsLoggedIn(false)
-			} finally {
-				setLoading(false)
-			}
-		}
-
-		checkIfLoggedIn()
-	}, [])
-
-	if (loading) {
+	if (authLoading) {
 		return <LoaderPage />
 	}
 
@@ -37,11 +21,11 @@ export default function App() {
 		<div className="App">
 			<Router>
 				<Routes>  
-                    <Route element={<PrivateRoutes isLoggedIn={ isLoggedIn } />}>
-						<Route path="/" element={<HomePage setIsLoggedIn={ setIsLoggedIn }/>} />
+                    <Route element={<PrivateRoutes />}>
+						<Route path="/" element={<HomePage />} />
 					</Route>
-                    <Route path="/login" element={<LoginPage setIsLoggedIn={ setIsLoggedIn }/>} />
-                    <Route path="/register" element={<RegisterPage setIsLoggedIn={ setIsLoggedIn }/>} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
                     <Route path="*" element={<NotFoundPage />} />
 				</Routes>
 			</Router>

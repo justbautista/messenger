@@ -54,7 +54,7 @@ const login = async (req, res) => {
 				.send(generateJsonResponse(false, "Invalid password"))
 		}
 
-        const newVersion = user["refreshTokenVersion"] + 1
+		const newVersion = user["refreshTokenVersion"] + 1
 
 		await User.updateOne(
 			{ username: username },
@@ -62,10 +62,7 @@ const login = async (req, res) => {
 		)
 
 		const accessToken = generateAccessToken(username)
-		const refreshToken = generateRefreshToken(
-			username,
-			newVersion
-		)
+		const refreshToken = generateRefreshToken(username, newVersion)
 		setTokens(res, accessToken, refreshToken)
 		return res.send(generateJsonResponse(true, "User logged in!"))
 	} catch (err) {
@@ -97,7 +94,11 @@ const logout = async (req, res) => {
 }
 
 const isLoggedIn = (req, res) => {
-	return res.send(generateJsonResponse(true, "User is logged in!"))
+	return res.send(
+		generateJsonResponse(true, "User is logged in!", {
+			username: req.body["username"],
+		})
+	)
 }
 
 module.exports = { register, login, logout, isLoggedIn }

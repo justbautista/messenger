@@ -58,17 +58,17 @@ io.use(async (socket, next) => {
 io.on("connection", (socket) => {
 	console.log(`${socket.id} is connected`)
 
-	socket.on("send_message", (data) => {
+	socket.on("send-message", (data) => {
 		console.log(data)
-		socket.to(data.room).emit("recieve_message", data)
+		socket.to(data.room).emit("recieve-message", data)
 	})
 
-	socket.on("join_room", (data) => {
-		console.log(data)
+	socket.on("join-room", (data) => {
+        console.log(data)
 		socket.join(data)
 	})
 
-	socket.on("leave_room", (data) => {
+	socket.on("leave-room", (data) => {
 		socket.leave(data)
 	})
 
