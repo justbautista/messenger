@@ -5,11 +5,11 @@ export default function Chat({ chat }) {
 	const { selectedChat, setSelectedChat } = useChat()
 
 	return (
-		<div onClick={() => setSelectedChat(chat["chatId"])}>
+		<div className="border-solid border-2 border-sky-500" onClick={() => setSelectedChat(chat["chatId"])}>
 			<p>{chat["chatName"]}</p>
 			<p>{chat["chatId"]}</p>
 			<p>{chat["updatedAt"]}</p>
-			<p>{chat["latestMessage"]}</p>
+			{/* <p>{chat["latestMessage"]}</p> */}
 			<p>{`selected chat: ${selectedChat} `}</p>
 		</div>
 	)

@@ -3,13 +3,15 @@ import api from "../helpers/axiosConfig"
 import { generateAxiosError, getAccessToken } from "../helpers/helpers"
 import { useChat } from "../contexts/ChatContext"
 import { useSocket } from "../contexts/SocketContext"
+import { useAuth } from "../contexts/AuthContext"
 
 export default function MessageBox() {
+	const { username } = useAuth()
 	const { selectedChat, messageStore, updateMessageStore } = useChat()
 	const { sendMessage } = useSocket()
 	const [currentMessages, setCurrentMessages] = useState({})
 	const [message, setMessage] = useState("")
-    
+
 	/*
         currentMessages
         {
@@ -21,6 +23,7 @@ export default function MessageBox() {
         {
             chatId: {
                 messages: messagesObject
+                newMessages: boolean ** (used for receive socket, so when changing chat, if there are new messages, get from server instead of messageStore)
             },
             ...
         }
@@ -32,15 +35,16 @@ export default function MessageBox() {
 				if (!selectedChat) {
 					return
 				}
-
-				if (currentMessages["messages"]) {
+                
+                // update messageStore with currentMessages before anything else
+				if (currentMessages["messages"] && currentMessages["messages"]["messages"].length > 0) {
 					updateMessageStore(
-						selectedChat,
+						currentMessages["chatId"],
 						currentMessages["messages"]
 					)
 				}
 
-				// if no chat in message store, fetch it and add to message store
+				// if no chat in messageStore, fetch it and add to messageStore and update currentMessages
 				if (!messageStore[selectedChat]) {
 					const response = await api.get(
 						`/chats/${selectedChat}/messages`,
@@ -53,11 +57,35 @@ export default function MessageBox() {
 						messages: response.data["messages"],
 					})
 				} else {
-					// if there is a chat, fetch from message store
-					setCurrentMessages({
-						chatId: selectedChat,
-						messages: messageStore[selectedChat],
-					})
+                    // if there is chat in messageStore and there are new messages in newly selected chat, update messageStore and currentMessages
+					if (messageStore[selectedChat]["anyNewMessages"]) {
+						const response = await api.get(
+							`/chats/${selectedChat}/messages`,
+							{
+								params: {
+									msgsLoaded:
+										messageStore[selectedChat]["messages"][
+											"totalMessagesLoaded"
+										],
+								},
+							}
+						)
+
+						updateMessageStore(
+							selectedChat,
+							response.data["messages"]
+						)
+						setCurrentMessages({
+							chatId: selectedChat,
+							messages: response.data["messages"],
+						})
+					} else {
+                        // if there is a chat and no new messages, fetch from messageStore
+						setCurrentMessages({
+							chatId: selectedChat,
+							messages: messageStore[selectedChat],
+						})
+					}
 				}
 			} catch (err) {
 				console.error(generateAxiosError(err))
@@ -68,6 +96,7 @@ export default function MessageBox() {
 	}, [selectedChat])
 
 	const loadMoreMessages = async () => {
+        // if not all messages are loaded, fetch more from api
 		if (!currentMessages["messages"]["allMessagesLoaded"]) {
 			const response = await api.get(`/chats/${selectedChat}/messages`, {
 				params: {
@@ -100,15 +129,28 @@ export default function MessageBox() {
 		const messageData = {
 			room: selectedChat,
 			message: message,
-			auth: {
-				token: getAccessToken(),
-			},
+			senderUsername: username,
 		}
 
 		sendMessage(messageData)
+		setCurrentMessages((prev) => ({
+			...prev,
+			messages: {
+				...prev["messages"],
+				totalMessagesLoaded:
+					prev["messages"]["totalMessagesLoaded"] + 1,
+				messages: [
+					{
+						senderUsername: messageData["senderUsername"],
+						message: messageData["message"],
+						timeStamp: Date.now(),
+					},
+					...prev["messages"]["messages"],
+				],
+			},
+		}))
 	}
 
-	// TODO: work on sending messsages to server
 	return (
 		<div>
 			{currentMessages["messages"] ? (
@@ -135,9 +177,9 @@ export default function MessageBox() {
 				onChange={(event) => {
 					setMessage(event.target.value)
 				}}
-                onKeyDown={(event) => {
-                    event.key === "Enter" && send()
-                }}
+				onKeyDown={(event) => {
+					event.key === "Enter" && send()
+				}}
 			/>
 		</div>
 	)

@@ -10,10 +10,14 @@ export function ChatProvider({ children }) {
 	const [selectedChat, setSelectedChat] = useState()
 	const [messageStore, setMessageStore] = useState([])
 
+    // only run when changing selectedChat
 	const updateMessageStore = (chatId, messages) => {
 		setMessageStore((prev) => ({
 			...prev,
-			[chatId]: messages,
+			[chatId]: {
+				...messages,
+				anyNewMessages: false,
+			},
 		}))
 	}
 

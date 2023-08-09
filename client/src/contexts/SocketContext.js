@@ -10,41 +10,53 @@ export function useSocket() {
 
 export function SocketProvider({ children }) {
 	const [receivedMessage, setReceivedMessage] = useState({})
-    const [socket, setSocket] = useState()
+	const [socket, setSocket] = useState()
 
-    // init socket
-    useEffect(() => {
-        const newSocket = io(process.env.REACT_APP_SOCKET_URI, {
-            auth: {
-                token: getAccessToken(),
-            },
-        })
-
-        setSocket(newSocket)
-
-        return () => newSocket.disconnect()
-    }, []) 
-
-    // listeners
+	// init socket
 	useEffect(() => {
-        if (socket && socket.connected) {
-            socket.on("receive-message", (receivedMessageData) => {
-                setReceivedMessage(receivedMessageData)
-            })
-        }
+		const newSocket = io(process.env.REACT_APP_SOCKET_URI, {
+			auth: {
+				token: getAccessToken(),
+			},
+		})
+
+		setSocket(newSocket)
+
+		return () => newSocket.disconnect()
+	}, [])
+
+	// listeners
+	useEffect(() => {
+		if (socket && socket.connected) {
+			socket.on("receive-message", (receivedMessageData) => {
+				setReceivedMessage(receivedMessageData)
+			})
+		}
 	}, [socket])
 
-    // emitters
-    const sendMessage = (messageData) => {
-        if (socket && socket.connected) {
-            socket.emit("send-message", messageData)
-        }
+	// emitters
+	const sendMessage = (messageData) => {
+		if (socket && socket.connected) {
+			socket.emit("send-message", messageData, (response) => {
+				if (response.error) {
+					console.error("Error: ", response.error)
+				} else {
+					console.log("Success: ", response.data)
+				}
+			})
+		}
 	}
 
 	const joinRoom = (room) => {
-        if (socket && socket.connected) {
-            socket.emit("join-room", room)
-        }
+		if (socket && socket.connected) {
+			socket.emit("join-room", room, (response) => {
+				if (response.error) {
+					console.error("Error: ", response.error)
+				} else {
+					console.log("Success: ", response.data)
+				}
+			})
+		}
 	}
 
 	return (
