@@ -9,7 +9,6 @@ export function useSocket() {
 }
 
 export function SocketProvider({ children }) {
-	const [receivedMessage, setReceivedMessage] = useState({})
 	const [socket, setSocket] = useState()
 
 	// init socket
@@ -25,43 +24,46 @@ export function SocketProvider({ children }) {
 		return () => newSocket.disconnect()
 	}, [])
 
-	// listeners
-	useEffect(() => {
-		if (socket && socket.connected) {
-			socket.on("receive-message", (receivedMessageData) => {
-				setReceivedMessage(receivedMessageData)
-			})
-		}
-	}, [socket])
-
 	// emitters
 	const sendMessage = (messageData) => {
-		if (socket && socket.connected) {
-			socket.emit("send-message", messageData, (response) => {
-				if (response.error) {
-					console.error("Error: ", response.error)
-				} else {
-					console.log("Success: ", response.data)
-				}
-			})
-		}
+        if (socket && socket.connected) {
+            socket.emit("send-message", messageData, (response) => {
+                if (response.ok) {
+                    console.log(response)
+                } else {
+                    console.error(response)
+                }
+            })	
+        }
 	}
 
 	const joinRoom = (room) => {
 		if (socket && socket.connected) {
 			socket.emit("join-room", room, (response) => {
-				if (response.error) {
-					console.error("Error: ", response.error)
-				} else {
-					console.log("Success: ", response.data)
-				}
+				if (response.ok) {
+                    console.log(response)
+                } else {
+                    console.error(response)
+                }
 			})
 		}
 	}
 
+    const read = (readData) => {
+        if (socket && socket.connected) {
+            socket.emit("read", readData, (response) => {
+                if (response.ok) {
+                    console.log(response)
+                } else {
+                    console.error(response)
+                }
+            })
+        }
+    }
+
 	return (
 		<SocketContext.Provider
-			value={{ sendMessage, joinRoom, receivedMessage }}
+			value={{ socket, sendMessage, joinRoom, read }}
 		>
 			{children}
 		</SocketContext.Provider>

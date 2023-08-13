@@ -8,7 +8,7 @@ import { useSocket } from "../contexts/SocketContext"
 export default function ChatList() {
 	const [chatList, setChatList] = useState([])
 	const { selectedChat, setSelectedChat } = useChat()
-    const { receivedMessage, joinRoom } = useSocket()
+    const { joinRoom } = useSocket()
 
 	useEffect(() => {
 		const getChatList = async () => {
@@ -31,10 +31,6 @@ export default function ChatList() {
             joinRoom(chat["chatId"])
         }
 	}, [chatList])
-
-    useEffect(() => {
-        console.log(receivedMessage)
-    }, [receivedMessage])
 
 	return (
 		<div>

@@ -50,7 +50,7 @@ const setTokens = (res, accessToken, refreshToken, expire = false) => {
 	}
 }
 
-const generateJsonResponse = (ok, message, custom = {}) => {
+const generateResponse = (ok, message, custom = {}) => {
 	const generalResponse = {
 		ok: ok,
 		message: message,
@@ -63,7 +63,7 @@ const generateJsonResponse = (ok, message, custom = {}) => {
 const checkAuth = async (req, res, next) => {
 	const accessToken = req.headers["authorization"]
 	const refreshToken = req.cookies["refreshToken"]
-	
+
 	try {
 		const verified = verifyAccessToken(accessToken.split(" ")[1])
 		const user = await User.exists({ username: verified["username"] })
@@ -71,7 +71,7 @@ const checkAuth = async (req, res, next) => {
 		if (!user) {
 			return res
 				.status(404)
-				.send(generateJsonResponse(false, "User not found"))
+				.send(generateResponse(false, "User not found"))
 		}
 
 		req.body["username"] = verified["username"]
@@ -88,9 +88,7 @@ const checkAuth = async (req, res, next) => {
 			if (!user) {
 				return res
 					.status(404)
-					.send(
-						generateJsonResponse(false, "User in token not found")
-					)
+					.send(generateResponse(false, "User in token not found"))
 			}
 
 			if (
@@ -98,7 +96,7 @@ const checkAuth = async (req, res, next) => {
 			) {
 				return res
 					.status(401)
-					.send(generateJsonResponse(false, "Refresh token invalid"))
+					.send(generateResponse(false, "Refresh token invalid"))
 			}
 
 			const newVersion = user["refreshTokenVersion"] + 1
@@ -112,7 +110,7 @@ const checkAuth = async (req, res, next) => {
 			)
 			setTokens(res, newAccessToken, newRefreshToken)
 			req.body["username"] = verifiedRefresh["username"]
-            
+
 			await User.updateOne(
 				{ username: verifiedRefresh["username"] },
 				{ $set: { refreshTokenVersion: newVersion } }
@@ -121,7 +119,7 @@ const checkAuth = async (req, res, next) => {
 			next()
 		} catch (err) {
 			return res.status(404).send(
-				generateJsonResponse(false, "Refresh token invalid", {
+				generateResponse(false, "Refresh token invalid", {
 					error: err,
 				})
 			)
@@ -134,6 +132,6 @@ module.exports = {
 	generateRefreshToken,
 	setTokens,
 	checkAuth,
-	generateJsonResponse,
+	generateResponse,
 	verifyAccessToken,
 }

@@ -4,7 +4,7 @@ const {
 	generateAccessToken,
 	generateRefreshToken,
 	setTokens,
-	generateJsonResponse,
+	generateResponse,
 } = require("../helpers/authHelpers")
 
 const register = async (req, res) => {
@@ -15,7 +15,7 @@ const register = async (req, res) => {
 		if (userExists) {
 			return res
 				.status(409)
-				.send(generateJsonResponse(false, "User already exists"))
+				.send(generateResponse(false, "User already exists"))
 		}
 
 		const hash = await bcrypt.hash(password, 10)
@@ -25,10 +25,10 @@ const register = async (req, res) => {
 		const refreshToken = generateRefreshToken(username, 0)
 		setTokens(res, accessToken, refreshToken)
 
-		return res.send(generateJsonResponse(true, "User created!"))
+		return res.send(generateResponse(true, "User created!"))
 	} catch (err) {
 		return res.status(500).send(
-			generateJsonResponse(false, "Problem creating user", {
+			generateResponse(false, "Problem creating user", {
 				error: err,
 			})
 		)
@@ -43,7 +43,7 @@ const login = async (req, res) => {
 		if (!user) {
 			return res
 				.status(404)
-				.send(generateJsonResponse(false, "User not found"))
+				.send(generateResponse(false, "User not found"))
 		}
 
 		const isValid = await bcrypt.compare(password, user["password"])
@@ -51,7 +51,7 @@ const login = async (req, res) => {
 		if (!isValid) {
 			return res
 				.status(401)
-				.send(generateJsonResponse(false, "Invalid password"))
+				.send(generateResponse(false, "Invalid password"))
 		}
 
 		const newVersion = user["refreshTokenVersion"] + 1
@@ -64,10 +64,10 @@ const login = async (req, res) => {
 		const accessToken = generateAccessToken(username)
 		const refreshToken = generateRefreshToken(username, newVersion)
 		setTokens(res, accessToken, refreshToken)
-		return res.send(generateJsonResponse(true, "User logged in!"))
+		return res.send(generateResponse(true, "User logged in!"))
 	} catch (err) {
 		return res.status(500).send(
-			generateJsonResponse(false, "Problem logging in user", {
+			generateResponse(false, "Problem logging in user", {
 				error: err,
 			})
 		)
@@ -83,10 +83,10 @@ const logout = async (req, res) => {
 		)
 		setTokens(res, "", "", true)
 
-		return res.send(generateJsonResponse(true, "Successfully logged out!"))
+		return res.send(generateResponse(true, "Successfully logged out!"))
 	} catch (err) {
 		return res.status(500).send(
-			generateJsonResponse(false, "Problem logging out user", {
+			generateResponse(false, "Problem logging out user", {
 				error: err,
 			})
 		)
@@ -95,7 +95,7 @@ const logout = async (req, res) => {
 
 const isLoggedIn = (req, res) => {
 	return res.send(
-		generateJsonResponse(true, "User is logged in!", {
+		generateResponse(true, "User is logged in!", {
 			username: req.body["username"],
 		})
 	)

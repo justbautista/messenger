@@ -1,6 +1,6 @@
 const User = require("../models/User")
 const Chat = require("../models/Chat")
-const { generateJsonResponse } = require("../helpers/authHelpers")
+const { generateResponse } = require("../helpers/authHelpers")
 const { formatChatList, loadMessages } = require("../helpers/chatHelpers")
 
 const createChat = async (req, res) => {
@@ -16,17 +16,17 @@ const createChat = async (req, res) => {
 		const chat = await Chat.create({ chatName: name, members: members })
 		await User.updateMany(
 			{ username: { $in: members } },
-			{ $push: { chatRooms: chat["_id"] } }
+			{ $push: { chatRooms: { room: chat["_id"], read: false } } }
 		)
 
 		return res.send(
-			generateJsonResponse(true, "Chat created!", {
+			generateResponse(true, "Chat created!", {
 				roomId: chat["_id"].toString(),
 			})
 		)
 	} catch (err) {
 		return res.status(500).send(
-			generateJsonResponse(false, "Problem creating chat", {
+			generateResponse(false, "Problem creating chat", {
 				error: err,
 			})
 		)
@@ -37,30 +37,31 @@ const getChatList = async (req, res) => {
 	try {
 		const { username } = req.body
 		const user = await User.findOne({ username: username })
-
-		const chatList = await Chat.find({ _id: { $in: user["chatRooms"] } })
-
+        
+		const chatIds = user["chatRooms"].map((chat) => chat["room"])
+		const chatList = await Chat.find({ _id: { $in: chatIds } })
+        
 		if (!chatList) {
 			return res
 				.status(404)
 				.send(
-					generateJsonResponse(
+					generateResponse(
 						false,
 						"One or more chatRooms do not exist"
 					)
 				)
 		}
-
-		const formattedChatList = formatChatList(chatList)
-
+        
+		const formattedChatList = formatChatList(chatList, user["chatRooms"])
+        
 		return res.send(
-			generateJsonResponse(true, "Fetched chat list", {
+			generateResponse(true, "Fetched chat list", {
 				chatList: formattedChatList,
 			})
 		)
 	} catch (err) {
 		return res.status(500).send(
-			generateJsonResponse(false, "Problem when fetching chat list", {
+			generateResponse(false, "Problem when fetching chat list", {
 				error: err,
 			})
 		)
@@ -76,19 +77,19 @@ const getMessages = async (req, res) => {
 		if (!chat) {
 			return res
 				.status(404)
-				.send(generateJsonResponse(false, "Couldn't find chat"))
+				.send(generateResponse(false, "Couldn't find chat"))
 		}
 
 		const messages = loadMessages(chat["messages"], msgsLoaded)
 
 		return res.send(
-			generateJsonResponse(true, "Fetched batch of messages!", {
+			generateResponse(true, "Fetched batch of messages!", {
 				messages: messages,
 			})
 		)
 	} catch (err) {
 		return res.status(500).send(
-			generateJsonResponse(false, "Problem with fetching chat", {
+			generateResponse(false, "Problem with fetching chat", {
 				error: err,
 			})
 		)
@@ -109,7 +110,7 @@ const deleteChat = async (req, res) => {
 		if (!updatedChat) {
 			return res
 				.status(404)
-				.send(generateJsonResponse(false, "Chat not found"))
+				.send(generateResponse(false, "Chat not found"))
 		}
 
 		if (updatedChat["members"].length === 0) {
@@ -118,15 +119,13 @@ const deleteChat = async (req, res) => {
 
 		await User.updateOne(
 			{ username: username },
-			{ $pull: { chatRooms: chatId } }
+			{ $pull: { chatRooms: { room: chatId } } }
 		)
 
-		return res.send(
-			generateJsonResponse(true, "Successfully deleted chat!")
-		)
+		return res.send(generateResponse(true, "Successfully deleted chat!"))
 	} catch (err) {
 		return res.status(500).send(
-			generateJsonResponse(false, "Problem with deleting chat", {
+			generateResponse(false, "Problem with deleting chat", {
 				error: err,
 			})
 		)

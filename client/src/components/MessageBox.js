@@ -8,7 +8,7 @@ import { useAuth } from "../contexts/AuthContext"
 export default function MessageBox() {
 	const { username } = useAuth()
 	const { selectedChat, messageStore, updateMessageStore } = useChat()
-	const { sendMessage } = useSocket()
+	const { sendMessage, read } = useSocket()
 	const [currentMessages, setCurrentMessages] = useState({})
 	const [message, setMessage] = useState("")
 
@@ -87,6 +87,13 @@ export default function MessageBox() {
 						})
 					}
 				}
+                
+                // mark as read
+                const readData = {
+                    room: selectedChat,
+                    username: username,
+                }
+                read(readData)
 			} catch (err) {
 				console.error(generateAxiosError(err))
 			}

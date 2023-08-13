@@ -18,7 +18,17 @@ const userScehma = new mongoose.Schema({
 		immutable: true,
 		default: () => Date.now(),
 	},
-	chatRooms: [{ type: mongoose.Schema.Types.ObjectId, ref: "Chat" }],
+	chatRooms: [
+		{
+			room: {
+				type: mongoose.Schema.Types.ObjectId,
+				ref: "Chat",
+			},
+			read: {
+				type: Boolean,
+			},
+		},
+	],
 })
 
 module.exports = mongoose.model("User", userScehma)

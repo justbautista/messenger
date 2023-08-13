@@ -1,5 +1,8 @@
 const { Server } = require("socket.io")
-const { verifyAccessToken } = require("../helpers/authHelpers")
+const {
+	verifyAccessToken,
+	generateResponse,
+} = require("../helpers/authHelpers")
 const User = require("../models/User")
 const Chat = require("../models/Chat")
 
@@ -54,15 +57,55 @@ const initializeSocket = (server) => {
 				)
 
 				if (chat) {
+					const membersExceptSender = chat["members"].filter(
+						(member) => member !== messageData["senderUsername"]
+					)
+					await User.updateMany(
+						{
+							username: { $in: membersExceptSender },
+							"chatRooms.room": messageData["room"],
+						},
+						{ $set: { "chatRooms.$.read": false } }
+					)
+
 					socket
 						.to(messageData["room"])
-						.emit("recieve-message", messageData)
-					callback({ message: "Successfully sent message" })
+						.emit("receive-message", messageData)
+					callback(
+						generateResponse(true, "Successfully sent message")
+					)
 				} else {
-					callback({ error: "Problem saving message" })
+					callback(generateResponse(false, "Problem saving message"))
 				}
 			} catch (err) {
-				callback({ error: err })
+				callback(
+					generateResponse(false, "Problem sending message", {
+						error: err,
+					})
+				)
+			}
+		})
+
+		socket.on("read", async (readData, callback) => {
+			console.log("read", readData)
+			try {
+				await User.findOneAndUpdate(
+					{
+						username: readData["username"],
+						"chatRooms.room": readData["room"],
+					},
+					{ $set: { "chatRooms.$.read": true } }
+				)
+
+				callback(
+					generateResponse(true, `${readData["username"]} read message`)
+				)
+			} catch (err) {
+				callback(
+					generateResponse(false, "Problem reading message", {
+						error: err,
+					})
+				)
 			}
 		})
 

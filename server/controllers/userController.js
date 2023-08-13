@@ -1,4 +1,4 @@
-const { generateJsonResponse } = require("../helpers/authHelpers")
+const { generateResponse } = require("../helpers/authHelpers")
 const User = require("../models/User")
 
 const searchUsers = async (req, res) => {
@@ -8,7 +8,7 @@ const searchUsers = async (req, res) => {
 		if (!user) {
 			return res
 				.status(400)
-				.send(generateJsonResponse(false, "Invalid or empty query"))
+				.send(generateResponse(false, "Invalid or empty query"))
 		}
 
 		const results = await User.aggregate([
@@ -36,22 +36,20 @@ const searchUsers = async (req, res) => {
 		if (results.length === 0) {
 			return res
 				.status(404)
-				.send(generateJsonResponse(false, "No users found"))
+				.send(generateResponse(false, "No users found"))
 		}
 
 		const resultList = results.map((result) => result["username"])
 
 		return res.send(
-			generateJsonResponse(true, "Found user(s)!", { users: resultList })
+			generateResponse(true, "Found user(s)!", { users: resultList })
 		)
 	} catch (err) {
-		return res
-			.status(500)
-			.send(
-				generateJsonResponse(false, "Problem with fetching users", {
-					error: err,
-				})
-			)
+		return res.status(500).send(
+			generateResponse(false, "Problem with fetching users", {
+				error: err,
+			})
+		)
 	}
 }
 

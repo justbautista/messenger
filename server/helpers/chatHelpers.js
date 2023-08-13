@@ -1,13 +1,18 @@
-const formatChatList = (chatList) => {
+const formatChatList = (chatList, rooms) => {
 	const formattedChatList = chatList
 		.map((chat) => {
 			chat["messages"].sort(
 				(a, b) => b["timeStamp"].getTime() - a["timeStamp"].getTime()
 			)
 
+			const readStatus = rooms.find(
+				(room) => room["room"].toString() === chat["_id"].toString()
+			)["read"]
+
 			const formattedChat = {
 				chatName: chat["chatName"],
 				chatId: chat["_id"].toString(),
+				read: readStatus,
 				updatedAt: chat["updatedAt"],
 				latestMessage: chat["messages"][0] || "No messages",
 			}
