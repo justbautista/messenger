@@ -5,8 +5,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 
 export default function RegisterPage() {
-    const { setIsLoggedIn } = useAuth()
-	const [username, setUsername] = useState("")
+    const { setIsLoggedIn, username, setUsername } = useAuth()
 	const [password, setPassword] = useState("")
 	const navigate = useNavigate()
 
@@ -17,6 +16,8 @@ export default function RegisterPage() {
 				username: username,
 				password: password,
 			})
+
+            setPassword("")
 			setIsLoggedIn(true)
 			navigate("/")
 		} catch (err) {

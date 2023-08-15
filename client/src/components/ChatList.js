@@ -7,8 +7,8 @@ import { useSocket } from "../contexts/SocketContext"
 
 export default function ChatList() {
 	const [chatList, setChatList] = useState([])
-	const { selectedChat, setSelectedChat } = useChat()
-    const { joinRoom } = useSocket()
+	const { selectedChat, setSelectedChat, setSessionReadTracker } = useChat()
+	const { joinRoom } = useSocket()
 
 	useEffect(() => {
 		const getChatList = async () => {
@@ -25,11 +25,21 @@ export default function ChatList() {
 	useEffect(() => {
 		if (chatList.length > 0 && !selectedChat) {
 			setSelectedChat(chatList[0]["chatId"])
+
+            for (const chat of chatList) {
+                joinRoom(chat["chatId"])
+            }
+    
+            const createChatListTracker = chatList.reduce(
+                (chats, chat) => ({
+                    ...chats,
+                    [chat.chatId]: chatList[0]["chatId"] === chat.chatId ? true : false,
+                }),
+                {}
+            )
+            setSessionReadTracker(createChatListTracker)
 		}
 
-        for (const chat of chatList) {
-            joinRoom(chat["chatId"])
-        }
 	}, [chatList])
 
 	return (

@@ -7,6 +7,7 @@ const User = require("../models/User")
 const Chat = require("../models/Chat")
 
 const initializeSocket = (server) => {
+    console.log("SOCKET <INITIALIZING>...")
 	const io = new Server(server, {
 		cors: {
 			origin: process.env.CLIENT_URI,
@@ -32,10 +33,10 @@ const initializeSocket = (server) => {
 	})
 
 	io.on("connection", (socket) => {
-		console.log(`${socket.id} is connected`)
+		console.log("SOCKET <CONNECTED>: ", socket.id)
 
 		socket.on("send-message", async (messageData, callback) => {
-			console.log(messageData)
+			console.log("SOCKET <SENDING>: ", messageData)
 			/*
                 {
                     room: selectedChat,
@@ -60,6 +61,7 @@ const initializeSocket = (server) => {
 					const membersExceptSender = chat["members"].filter(
 						(member) => member !== messageData["senderUsername"]
 					)
+                    
 					await User.updateMany(
 						{
 							username: { $in: membersExceptSender },
@@ -87,7 +89,7 @@ const initializeSocket = (server) => {
 		})
 
 		socket.on("read", async (readData, callback) => {
-			console.log("read", readData)
+			console.log("SOCKET <READING>: ", readData)
 			try {
 				await User.findOneAndUpdate(
 					{
@@ -110,16 +112,13 @@ const initializeSocket = (server) => {
 		})
 
 		socket.on("join-room", (data) => {
-			console.log(data)
+			console.log("SOCKET <JOINING ROOM>: ", data)
 			socket.join(data)
 		})
 
 		socket.on("leave-room", (data) => {
+			console.log("SOCKET <LEAVING ROOM>: ", data)
 			socket.leave(data)
-		})
-
-		socket.on("test", (data) => {
-			socket.emit("receive_message", data)
 		})
 	})
 }

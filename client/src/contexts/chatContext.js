@@ -9,15 +9,13 @@ export function useChat() {
 export function ChatProvider({ children }) {
 	const [selectedChat, setSelectedChat] = useState()
 	const [messageStore, setMessageStore] = useState([])
+    const [sessionReadTracker, setSessionReadTracker] = useState({})
 
     // only run when changing selectedChat
 	const updateMessageStore = (chatId, messages) => {
 		setMessageStore((prev) => ({
 			...prev,
-			[chatId]: {
-				...messages,
-				anyNewMessages: false,
-			},
+			[chatId]: messages,
 		}))
 	}
 
@@ -28,6 +26,8 @@ export function ChatProvider({ children }) {
 				setSelectedChat,
 				messageStore,
 				updateMessageStore,
+                sessionReadTracker,
+                setSessionReadTracker
 			}}
 		>
 			{children}

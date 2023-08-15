@@ -11,14 +11,16 @@ import { SocketProvider } from "../contexts/SocketContext"
 import { useAuth } from "../contexts/AuthContext"
 
 export default function HomePage() {
-    const { setIsLoggedIn } = useAuth()
+    const { setIsLoggedIn, setUsername } = useAuth()
 	const navigate = useNavigate()
 
 	const logout = async (event) => {
 		event.preventDefault()
 		try {
 			await api.post("/auth/logout")
+            
 			removeAccessToken()
+            setUsername("")
 			setIsLoggedIn(false)
 			navigate("/login")
 		} catch (err) {

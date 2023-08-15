@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/AuthContext"
 
 export default function Chat({ chat }) {
     const { username } = useAuth()
-	const { selectedChat, setSelectedChat } = useChat()
+	const { selectedChat, setSelectedChat, setSessionReadTracker } = useChat()
     const { socket, read } = useSocket()
     const [receivedMessage, setReceivedMessage] = useState(chat["latestMessage"]["message"])
     const [readStatus, setReadStatus] = useState(chat["read"])
@@ -23,10 +23,13 @@ export default function Chat({ chat }) {
                             room: selectedChat,
                             username: username
                         }
+                        
                         read(readData)
                         setReadStatus(true)
+                        setSessionReadTracker((prev) => ({ ...prev, [chat.chatId]: true }))
                     } else {
                         setReadStatus(false)
+                        setSessionReadTracker((prev) => ({ ...prev, [chat.chatId]: false }))
                     }
                 }
 			})
@@ -41,7 +44,7 @@ export default function Chat({ chat }) {
 			<p>{chat["chatId"]}</p>
 			<p>{chat["updatedAt"]}</p>
             <p>{readStatus}</p>
-			<p>{receivedMessage}</p>
+			<p>{receivedMessage["message"]}</p>
 			<p>{`selected chat: ${selectedChat} `}</p>
 		</div>
 	)

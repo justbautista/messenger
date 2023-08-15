@@ -7,8 +7,14 @@ import { useAuth } from "../contexts/AuthContext"
 
 export default function MessageBox() {
 	const { username } = useAuth()
-	const { selectedChat, messageStore, updateMessageStore } = useChat()
-	const { sendMessage, read } = useSocket()
+	const {
+		selectedChat,
+		messageStore,
+		updateMessageStore,
+		sessionReadTracker,
+		setSessionReadTracker,
+	} = useChat()
+	const { socket, sendMessage, read } = useSocket()
 	const [currentMessages, setCurrentMessages] = useState({})
 	const [message, setMessage] = useState("")
 
@@ -35,9 +41,12 @@ export default function MessageBox() {
 				if (!selectedChat) {
 					return
 				}
-                
-                // update messageStore with currentMessages before anything else
-				if (currentMessages["messages"] && currentMessages["messages"]["messages"].length > 0) {
+
+				// update messageStore with currentMessages before anything else
+				if (
+					currentMessages["messages"] &&
+					currentMessages["messages"]["messages"].length > 0
+				) {
 					updateMessageStore(
 						currentMessages["chatId"],
 						currentMessages["messages"]
@@ -57,8 +66,8 @@ export default function MessageBox() {
 						messages: response.data["messages"],
 					})
 				} else {
-                    // if there is chat in messageStore and there are new messages in newly selected chat, update messageStore and currentMessages
-					if (messageStore[selectedChat]["anyNewMessages"]) {
+					// if there is chat in messageStore and there are new messages in newly selected chat, update messageStore and currentMessages
+					if (!sessionReadTracker[selectedChat]) {
 						const response = await api.get(
 							`/chats/${selectedChat}/messages`,
 							{
@@ -80,20 +89,24 @@ export default function MessageBox() {
 							messages: response.data["messages"],
 						})
 					} else {
-                        // if there is a chat and no new messages, fetch from messageStore
+						// if there is a chat and no new messages, fetch from messageStore
 						setCurrentMessages({
 							chatId: selectedChat,
 							messages: messageStore[selectedChat],
 						})
 					}
 				}
-                
-                // mark as read
-                const readData = {
-                    room: selectedChat,
-                    username: username,
-                }
-                read(readData)
+
+				// mark as read
+				const readData = {
+					room: selectedChat,
+					username: username,
+				}
+				read(readData)
+				setSessionReadTracker((prev) => ({
+					...prev,
+					[selectedChat]: true,
+				}))
 			} catch (err) {
 				console.error(generateAxiosError(err))
 			}
@@ -102,8 +115,36 @@ export default function MessageBox() {
 		getMessages()
 	}, [selectedChat])
 
+    useEffect(() => {
+		if (socket) {
+            // here should just add to currentMessages only
+			socket.on("receive-message", (receivedMessageData) => {
+                if (receivedMessageData["room"] === selectedChat) {
+                    setCurrentMessages((prev) => ({
+                        ...prev,
+                        messages: {
+                            ...prev["messages"],
+                            totalMessagesLoaded:
+                                prev["messages"]["totalMessagesLoaded"] + 1,
+                            messages: [
+                                {
+                                    senderUsername: receivedMessageData["senderUsername"],
+                                    message: receivedMessageData["message"],
+                                    timeStamp: Date.now(),
+                                },
+                                ...prev["messages"]["messages"],
+                            ],
+                        },
+                    }))
+                }
+			})
+		}
+
+        return () => socket && socket.off("receive-message")
+	}, [socket, selectedChat])
+
 	const loadMoreMessages = async () => {
-        // if not all messages are loaded, fetch more from api
+		// if not all messages are loaded, fetch more from api
 		if (!currentMessages["messages"]["allMessagesLoaded"]) {
 			const response = await api.get(`/chats/${selectedChat}/messages`, {
 				params: {
