@@ -7,7 +7,7 @@ const {
 	generateResponse,
 } = require("../helpers/authHelpers")
 
-const register = async (req, res) => {
+const signUp = async (req, res) => {
 	try {
 		const { username, password } = req.body
 		const userExists = await User.exists({ username: username })
@@ -101,4 +101,4 @@ const isLoggedIn = (req, res) => {
 	)
 }
 
-module.exports = { register, login, logout, isLoggedIn }
+module.exports = { signUp, login, logout, isLoggedIn }

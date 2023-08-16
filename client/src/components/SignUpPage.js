@@ -4,7 +4,7 @@ import { generateAxiosError } from "../helpers/helpers"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 
-export default function LoginPage() {
+export default function SignUpPage() {
 	const { setIsLoggedIn, username, setUsername } = useAuth()
 	const [password, setPassword] = useState("")
 	const navigate = useNavigate()
@@ -12,7 +12,7 @@ export default function LoginPage() {
 	const handleSubmit = async (event) => {
 		event.preventDefault()
 		try {
-			await api.post("/auth/login", {
+			await api.post("/auth/signUp", {
 				username: username,
 				password: password,
 			})
@@ -31,7 +31,7 @@ export default function LoginPage() {
 				className="p-10 border-2 border-solid border-slate-200 rounded-xl"
 				onSubmit={handleSubmit}
 			>
-				<h1 className="text-center text-3xl font-bold mb-10">Login</h1>
+				<h1 className="text-center text-3xl font-bold mb-10">Sign Up</h1>
 				<div className="flex flex-col mb-2">
 					<label
 						className="text-sm font-semibold mb-1"
@@ -71,13 +71,13 @@ export default function LoginPage() {
 						className="transition ease-in-out bg-red-400 my-2 p-2 hover:bg-white hover:ring hover:ring-red-400 hover:text-red-400 focus:ring focus:ring-red-600 focus:ring-offset-2 rounded-sm text-white font-bold"
 						type="submit"
 					>
-						Login
+						Sign Up
 					</button>
 					<Link
 						className="w-full text-center py-2 text-sm underline hover:no-underline focus:text-red-600 visited:text-red-600"
-						to="/signUp"
+						to="/login"
 					>
-						Sign Up Here
+						Login Here
 					</Link>
 				</div>
 			</form>
