@@ -13,6 +13,16 @@ const createChat = async (req, res) => {
 			name = chatName
 		}
 
+		const findChat = await Chat.findOne({
+			members: { $all: members, $size: members.length },
+		})
+
+		if (findChat) {
+			return res
+				.status(409)
+				.send(generateResponse(false, "Chat already exists"))
+		}
+
 		const chat = await Chat.create({ chatName: name, members: members })
 		await User.updateMany(
 			{ username: { $in: members } },
@@ -37,10 +47,10 @@ const getChatList = async (req, res) => {
 	try {
 		const { username } = req.body
 		const user = await User.findOne({ username: username })
-        
+
 		const chatIds = user["chatRooms"].map((chat) => chat["room"])
 		const chatList = await Chat.find({ _id: { $in: chatIds } })
-        
+
 		if (!chatList) {
 			return res
 				.status(404)
@@ -51,9 +61,9 @@ const getChatList = async (req, res) => {
 					)
 				)
 		}
-        
+
 		const formattedChatList = formatChatList(chatList, user["chatRooms"])
-        
+
 		return res.send(
 			generateResponse(true, "Fetched chat list", {
 				chatList: formattedChatList,
@@ -84,6 +94,7 @@ const getMessages = async (req, res) => {
 
 		return res.send(
 			generateResponse(true, "Fetched batch of messages!", {
+				chatName: chat["chatName"],
 				messages: messages,
 			})
 		)

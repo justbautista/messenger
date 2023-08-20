@@ -7,7 +7,7 @@ const User = require("../models/User")
 const Chat = require("../models/Chat")
 
 const initializeSocket = (server) => {
-    console.log("SOCKET <INITIALIZING>...")
+	console.log("SOCKET <INITIALIZING>...")
 	const io = new Server(server, {
 		cors: {
 			origin: process.env.CLIENT_URI,
@@ -61,7 +61,7 @@ const initializeSocket = (server) => {
 					const membersExceptSender = chat["members"].filter(
 						(member) => member !== messageData["senderUsername"]
 					)
-                    
+
 					await User.updateMany(
 						{
 							username: { $in: membersExceptSender },
@@ -73,6 +73,9 @@ const initializeSocket = (server) => {
 					socket
 						.to(messageData["room"])
 						.emit("receive-message", messageData)
+					socket
+						.to(messageData["room"])
+						.emit("latest-message", messageData)
 					callback(
 						generateResponse(true, "Successfully sent message")
 					)
@@ -100,7 +103,10 @@ const initializeSocket = (server) => {
 				)
 
 				callback(
-					generateResponse(true, `${readData["username"]} read message`)
+					generateResponse(
+						true,
+						`${readData["username"]} read message`
+					)
 				)
 			} catch (err) {
 				callback(

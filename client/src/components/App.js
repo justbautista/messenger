@@ -12,7 +12,11 @@ export default function App() {
 	const { authLoading, isLoggedIn } = useAuth()
 
 	if (authLoading) {
-		return <LoaderPage />
+		return (
+            <div className="h-screen w-screen">
+                <LoaderPage />
+            </div>
+        )
 	}
 
 	return (

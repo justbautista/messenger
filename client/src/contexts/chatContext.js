@@ -9,13 +9,18 @@ export function useChat() {
 export function ChatProvider({ children }) {
 	const [selectedChat, setSelectedChat] = useState()
 	const [messageStore, setMessageStore] = useState([])
-    const [sessionReadTracker, setSessionReadTracker] = useState({})
+	const [sessionReadTracker, setSessionReadTracker] = useState({})
+	const [sentMessage, setSentMessage] = useState({})
+    const [showNewChatModal, setShowNewChatModal] = useState(false)
 
-    // only run when changing selectedChat
-	const updateMessageStore = (chatId, messages) => {
+	// only run when changing selectedChat
+	const updateMessageStore = (chatId, messages, chatName) => {
 		setMessageStore((prev) => ({
 			...prev,
-			[chatId]: messages,
+			[chatId]: {
+				messages: messages,
+				chatName: chatName,
+			},
 		}))
 	}
 
@@ -26,8 +31,12 @@ export function ChatProvider({ children }) {
 				setSelectedChat,
 				messageStore,
 				updateMessageStore,
-                sessionReadTracker,
-                setSessionReadTracker
+				sessionReadTracker,
+				setSessionReadTracker,
+				sentMessage,
+				setSentMessage,
+                showNewChatModal,
+                setShowNewChatModal
 			}}
 		>
 			{children}

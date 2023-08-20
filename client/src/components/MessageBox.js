@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react"
 import api from "../helpers/axiosConfig"
-import { generateAxiosError, getAccessToken } from "../helpers/helpers"
+import { generateAxiosError } from "../helpers/helpers"
 import { useChat } from "../contexts/ChatContext"
 import { useSocket } from "../contexts/SocketContext"
 import { useAuth } from "../contexts/AuthContext"
+import { formatDate } from "../helpers/helpers"
+import LoaderPage from "./LoaderPage"
 
 export default function MessageBox() {
 	const { username } = useAuth()
@@ -13,27 +15,11 @@ export default function MessageBox() {
 		updateMessageStore,
 		sessionReadTracker,
 		setSessionReadTracker,
+		setSentMessage,
 	} = useChat()
 	const { socket, sendMessage, read } = useSocket()
 	const [currentMessages, setCurrentMessages] = useState({})
 	const [message, setMessage] = useState("")
-
-	/*
-        currentMessages
-        {
-            chatId: chatId,
-            messages: messagesObject
-        }
-
-        messageStore
-        {
-            chatId: {
-                messages: messagesObject
-                newMessages: boolean ** (used for receive socket, so when changing chat, if there are new messages, get from server instead of messageStore)
-            },
-            ...
-        }
-    */
 
 	useEffect(() => {
 		const getMessages = async () => {
@@ -47,9 +33,11 @@ export default function MessageBox() {
 					currentMessages["messages"] &&
 					currentMessages["messages"]["messages"].length > 0
 				) {
+					console.log("updates message store")
 					updateMessageStore(
 						currentMessages["chatId"],
-						currentMessages["messages"]
+						currentMessages["messages"],
+						currentMessages["chatName"]
 					)
 				}
 
@@ -59,40 +47,43 @@ export default function MessageBox() {
 						`/chats/${selectedChat}/messages`,
 						{ params: { msgsLoaded: 0 } }
 					)
-
-					updateMessageStore(selectedChat, response.data["messages"])
+					console.log("not in messageStore, fetch")
+					updateMessageStore(
+						selectedChat,
+						response.data["messages"],
+						response.data["chatName"]
+					)
 					setCurrentMessages({
 						chatId: selectedChat,
+						chatName: response.data["chatName"],
 						messages: response.data["messages"],
 					})
 				} else {
-					// if there is chat in messageStore and there are new messages in newly selected chat, update messageStore and currentMessages
+					// if there is chat in messageStore and there are new messages in newly selected chat, update currentMessages
 					if (!sessionReadTracker[selectedChat]) {
 						const response = await api.get(
 							`/chats/${selectedChat}/messages`,
-							{
-								params: {
-									msgsLoaded:
-										messageStore[selectedChat]["messages"][
-											"totalMessagesLoaded"
-										],
-								},
-							}
+							{ params: { msgsLoaded: 0 } }
 						)
-
-						updateMessageStore(
-							selectedChat,
-							response.data["messages"]
-						)
+						// TODO: maybe take out msgs loaded for this
+						console.log("new messages from chat")
+						// updateMessageStore(
+						// 	selectedChat,
+						// 	response.data["messages"],
+						//     response.data["chatName"]
+						// )
 						setCurrentMessages({
 							chatId: selectedChat,
+							chatName: response.data["chatName"],
 							messages: response.data["messages"],
 						})
 					} else {
 						// if there is a chat and no new messages, fetch from messageStore
+						console.log("get from messageStore")
 						setCurrentMessages({
 							chatId: selectedChat,
-							messages: messageStore[selectedChat],
+							chatName: messageStore[selectedChat]["chatName"],
+							messages: messageStore[selectedChat]["messages"],
 						})
 					}
 				}
@@ -107,6 +98,7 @@ export default function MessageBox() {
 					...prev,
 					[selectedChat]: true,
 				}))
+				setMessage("")
 			} catch (err) {
 				console.error(generateAxiosError(err))
 			}
@@ -115,32 +107,33 @@ export default function MessageBox() {
 		getMessages()
 	}, [selectedChat])
 
-    useEffect(() => {
+	useEffect(() => {
 		if (socket) {
-            // here should just add to currentMessages only
+			// here should just add to currentMessages only
 			socket.on("receive-message", (receivedMessageData) => {
-                if (receivedMessageData["room"] === selectedChat) {
-                    setCurrentMessages((prev) => ({
-                        ...prev,
-                        messages: {
-                            ...prev["messages"],
-                            totalMessagesLoaded:
-                                prev["messages"]["totalMessagesLoaded"] + 1,
-                            messages: [
-                                {
-                                    senderUsername: receivedMessageData["senderUsername"],
-                                    message: receivedMessageData["message"],
-                                    timeStamp: Date.now(),
-                                },
-                                ...prev["messages"]["messages"],
-                            ],
-                        },
-                    }))
-                }
+				if (receivedMessageData["room"] === selectedChat) {
+					setCurrentMessages((prev) => ({
+						...prev,
+						messages: {
+							...prev["messages"],
+							totalMessagesLoaded:
+								prev["messages"]["totalMessagesLoaded"] + 1,
+							messages: [
+								{
+									senderUsername:
+										receivedMessageData["senderUsername"],
+									message: receivedMessageData["message"],
+									timeStamp: new Date().toISOString(),
+								},
+								...prev["messages"]["messages"],
+							],
+						},
+					}))
+				}
 			})
 		}
 
-        return () => socket && socket.off("receive-message")
+		return () => socket && socket.off("receive-message")
 	}, [socket, selectedChat])
 
 	const loadMoreMessages = async () => {
@@ -162,7 +155,7 @@ export default function MessageBox() {
 						response.data["messages"]["totalMessagesLoaded"],
 					messages: [
 						...prev["messages"]["messages"],
-						response.data["messages"]["messages"],
+						...response.data["messages"]["messages"],
 					],
 				},
 			}))
@@ -180,6 +173,12 @@ export default function MessageBox() {
 			senderUsername: username,
 		}
 
+		const localMessageData = {
+			senderUsername: messageData["senderUsername"],
+			message: messageData["message"],
+			timeStamp: new Date().toISOString(),
+		}
+
 		sendMessage(messageData)
 		setCurrentMessages((prev) => ({
 			...prev,
@@ -187,52 +186,82 @@ export default function MessageBox() {
 				...prev["messages"],
 				totalMessagesLoaded:
 					prev["messages"]["totalMessagesLoaded"] + 1,
-				messages: [
-					{
-						senderUsername: messageData["senderUsername"],
-						message: messageData["message"],
-						timeStamp: Date.now(),
-					},
-					...prev["messages"]["messages"],
-				],
+				messages: [localMessageData, ...prev["messages"]["messages"]],
 			},
 		}))
+		setSentMessage(localMessageData)
+		setMessage("")
 	}
 
 	return (
-		<div>
-			{currentMessages["messages"] ? (
-				<div>
-					<p>{currentMessages["chatId"]}</p>
-					<p>
-						{currentMessages["messages"][
-							"allMessagesLoaded"
-						].toString()}
-					</p>
-					<p>{currentMessages["messages"]["totalMessagesLoaded"]}</p>
-				</div>
-			) : (
-				<p>Loading messages</p>
-			)}
-			{currentMessages["messages"] &&
-				!currentMessages["messages"]["allMessagesLoaded"] && (
-					<p>***load more***</p>
+		<div className="col-span-2 flex flex-col overflow-y-hidden">
+			<div className="p-5 border-b">
+				<p className="font-bold">{currentMessages["chatName"]}</p>
+			</div>
+			<div className="overflow-y-scroll grow flex flex-col-reverse p-2 gap-2">
+				{currentMessages["messages"] ? (
+					currentMessages["messages"]["messages"].map((message) =>
+						username === message["senderUsername"] ? (
+							<div
+								key={crypto.randomUUID()}
+								className="flex flex-col items-end"
+							>
+								<div className="flex justify-end w-1/2">
+									<p className="bg-red-400 p-2 rounded-md text-white break-all">
+										{message["message"]}
+									</p>
+								</div>
+								<p className="text-xs px-2">
+									{formatDate(message["timeStamp"])}
+								</p>
+							</div>
+						) : (
+							<div
+								key={crypto.randomUUID()}
+								className="flex flex-col items-start"
+							>
+								<p className="text-xs px-2">
+									{message["senderUsername"]}
+								</p>
+								<div className="flex justify-start w-1/2">
+									<p className="bg-slate-200 p-2 rounded-md break-all">
+										{message["message"]}
+									</p>
+								</div>
+								<p className="text-xs px-2">
+									{formatDate(message["timeStamp"])}
+								</p>
+							</div>
+						)
+					)
+				) : (
+					<LoaderPage />
 				)}
-			<input
-				type="text"
-				name="message"
-				value={message}
-				onChange={(event) => {
-					setMessage(event.target.value)
-				}}
-				onKeyDown={(event) => {
-					event.key === "Enter" && send()
-				}}
-			/>
+				{currentMessages["messages"] &&
+					!currentMessages["messages"]["allMessagesLoaded"] && (
+						<button
+							className="transition ease-in-out mx-auto bg-white my-2 ring ring-red-400 p-2 hover:ring-transparent hover:text-white focus:ring hover:bg-red-400 focus:ring-red-600 focus:ring-offset-2 rounded-sm text-red-400 font-bold"
+							onClick={loadMoreMessages}
+						>
+							Load More
+						</button>
+					)}
+			</div>
+			<div className="w-full p-2">
+				<input
+					className="transition ease-in-out w-full bg-slate-200 rounded-sm p-2 hover:ring hover:ring-slate-300 focus:outline-none focus:ring focus:ring-red-300"
+					type="text"
+					name="message"
+					value={message}
+					placeholder="Type your message here..."
+					onChange={(event) => {
+						setMessage(event.target.value)
+					}}
+					onKeyDown={(event) => {
+						event.key === "Enter" && send()
+					}}
+				/>
+			</div>
 		</div>
 	)
 }
-// TODO: add a receive flag, messageStore shouldnt be updated on receive, it should update the chatList but not messageStore,
-// if there is a receive flag, the react will fetch messages from backend then update messageStore
-// only sends update messageStore
-// however, active chats can get received messages to
