@@ -134,16 +134,22 @@ export default function ChatList({
 				</svg>
 			</div>
 			<div className="grow overflow-y-auto">
-				{chatList.map((chat) => (
-					<Chat
-						key={chat["chatId"]}
-						chat={chat}
-						setChatList={setChatList}
-						chatList={chatList}
-						setToggleChatList={setToggleChatList}
-						responsiveChatList={responsiveChatList}
-					/>
-				))}
+				{chatList.length > 0 ? (
+					chatList.map((chat) => (
+						<Chat
+							key={chat["chatId"]}
+							chat={chat}
+							setChatList={setChatList}
+							chatList={chatList}
+							setToggleChatList={setToggleChatList}
+							responsiveChatList={responsiveChatList}
+						/>
+					))
+				) : (
+					<p className="p-2 font-bold text-lg">
+						You have no chats...
+					</p>
+				)}
 			</div>
 		</div>
 	)
