@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react"
+import React, { useRef, useEffect } from "react"
 import api from "../helpers/axiosConfig"
 import { generateAxiosError } from "../helpers/helpers"
 import { useSocket } from "../contexts/SocketContext"
@@ -12,7 +12,7 @@ export default function ContextMenu({
 	setContextMenuPosition,
 }) {
 	const menu = useRef(null)
-    const { leaveRoom } = useSocket()
+	const { leaveRoom } = useSocket()
 
 	useEffect(() => {
 		const handleOutsideClick = (event) => {
@@ -32,14 +32,14 @@ export default function ContextMenu({
 			const removedChat = chatList.filter(
 				(chatInList) => chatInList["chatId"] !== chat["chatId"]
 			)
-            
+
 			await api.delete(`/chats/${chat["chatId"]}`)
-            leaveRoom(chat["chatId"])
+			leaveRoom(chat["chatId"])
 			setContextMenuPosition(null)
 			setChatList(removedChat)
 		} catch (err) {
-            console.error(generateAxiosError(err))
-        }
+			console.error(generateAxiosError(err))
+		}
 	}
 
 	return (

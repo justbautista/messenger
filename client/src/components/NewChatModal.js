@@ -51,35 +51,36 @@ export default function NewChatModal({ setChatList }) {
 	}, [userInput])
 
 	const createChat = async () => {
-        try {
-            if (addedUserList.length === 0) {
-                return
-            }
+		try {
+			if (addedUserList.length === 0) {
+				return
+			}
 
-            const memberList = [...addedUserList, username]
-    
-            const response = await api.post("/chats", {
-                members: memberList,
-                chatName: chatName,
-            })
-            
-            const newChat = {
-                chatName: chatName.trim() !== "" ? chatName : memberList.join(", "),
-                chatId: response.data["roomId"],
-                read: false,
-                updatedAt: new Date().toISOString(),
-                latestMessage: false
-            }
+			const memberList = [...addedUserList, username]
 
-            setChatList(prev => [newChat, ...prev])
-            setShowNewChatModal(false)
-        } catch (err) {
-            console.error(generateAxiosError(err))
-        }
+			const response = await api.post("/chats", {
+				members: memberList,
+				chatName: chatName,
+			})
+
+			const newChat = {
+				chatName:
+					chatName.trim() !== "" ? chatName : memberList.join(", "),
+				chatId: response.data["roomId"],
+				read: false,
+				updatedAt: new Date().toISOString(),
+				latestMessage: false,
+			}
+
+			setChatList((prev) => [newChat, ...prev])
+			setShowNewChatModal(false)
+		} catch (err) {
+			console.error(generateAxiosError(err))
+		}
 	}
 
 	const addUserToList = (userToAdd) => {
-        setUserInput("")
+		setUserInput("")
 		setAddedUserList((prev) => [...prev, userToAdd])
 	}
 
@@ -178,7 +179,10 @@ export default function NewChatModal({ setChatList }) {
 						))}
 					</div>
 				)}
-				<button className="transition ease-in-out bg-red-400 my-2 p-2 hover:bg-white hover:ring hover:ring-red-400 hover:text-red-400 focus:ring focus:ring-red-600 focus:ring-offset-2 rounded-sm text-white font-bold" onClick={createChat}>
+				<button
+					className="transition ease-in-out bg-red-400 my-2 p-2 hover:bg-white hover:ring hover:ring-red-400 hover:text-red-400 focus:ring focus:ring-red-600 focus:ring-offset-2 rounded-sm text-white font-bold"
+					onClick={createChat}
+				>
 					Create Chat
 				</button>
 			</div>

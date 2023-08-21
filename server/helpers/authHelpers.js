@@ -75,7 +75,6 @@ const checkAuth = async (req, res, next) => {
 		}
 
 		req.body["username"] = verified["username"]
-		// res.send({ ok: true, message: "Access token verified" })
 		next()
 	} catch (err) {
 		try {
@@ -115,7 +114,6 @@ const checkAuth = async (req, res, next) => {
 				{ username: verifiedRefresh["username"] },
 				{ $set: { refreshTokenVersion: newVersion } }
 			)
-			// res.send({ ok: true, message: "Successfully refreshed token pair!" })
 			next()
 		} catch (err) {
 			return res.status(404).send(

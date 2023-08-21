@@ -12,8 +12,8 @@ export default function HomePage() {
 	const { setIsLoggedIn, setUsername, username } = useAuth()
 	const { setMessageStore } = useChat()
 	const [toggle, setToggle] = useState(false)
-	const [toggleChatList, setToggleChatList] = useState() // if responsiveness ia on, toggle chat list
-	const [responsiveChatList, setResponsiveChatList] = useState(false) // turn responseiveness on??
+	const [toggleChatList, setToggleChatList] = useState() // if responsiveness is on, toggle chatList
+	const [responsiveChatList, setResponsiveChatList] = useState(false) // turn responsive chatList on/off
 	const userButtonRef = useRef(null)
 	const userDropdownRef = useRef(null)
 	const navigate = useNavigate()

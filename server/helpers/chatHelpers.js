@@ -37,11 +37,11 @@ const loadMessages = (messages, msgsLoaded) => {
 	const sortedMessages = messages.sort(
 		(a, b) => b["timeStamp"].getTime() - a["timeStamp"].getTime()
 	)
-    console.log("msgsLoaded: ", msgsLoaded)
+	console.log("msgsLoaded: ", msgsLoaded)
 	const messageLimit = 50
 	let allMessagesLoaded = false
 	let placeOfLastMessageToLoad = msgsLoaded + messageLimit
-    console.log("place: ", placeOfLastMessageToLoad)
+	console.log("place: ", placeOfLastMessageToLoad)
 	if (totalMessages - msgsLoaded <= messageLimit) {
 		allMessagesLoaded = true
 		placeOfLastMessageToLoad = totalMessages

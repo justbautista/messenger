@@ -28,7 +28,7 @@ export default function Chat({
 	useEffect(() => {
 		if (socket) {
 			socket.on("latest-message", (receivedMessageData) => {
-				// if message received is this chat
+				// if message received is for this chat
 				if (receivedMessageData["room"] === chat["chatId"]) {
 					const msgDataWithTimestamp = {
 						...receivedMessageData,
@@ -80,7 +80,7 @@ export default function Chat({
 		const rect = e.currentTarget.getBoundingClientRect()
 		const offsetX = e.clientX - rect.left
 		const offsetY = e.clientY - rect.top
-        setContextMenuPosition({ x: offsetX, y: offsetY })
+		setContextMenuPosition({ x: offsetX, y: offsetY })
 	}
 
 	const handleChatSelection = () => {

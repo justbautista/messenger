@@ -28,7 +28,7 @@ const createChat = async (req, res) => {
 			{ username: { $in: members } },
 			{ $push: { chatRooms: { room: chat["_id"], read: false } } }
 		)
-        console.log(chat)
+		console.log(chat)
 		return res.send(
 			generateResponse(true, "Chat created!", {
 				roomId: chat["_id"].toString(),

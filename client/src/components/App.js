@@ -13,10 +13,10 @@ export default function App() {
 
 	if (authLoading) {
 		return (
-            <div className="h-screen w-screen">
-                <LoaderPage />
-            </div>
-        )
+			<div className="h-screen w-screen">
+				<LoaderPage />
+			</div>
+		)
 	}
 
 	return (

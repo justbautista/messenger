@@ -26,52 +26,44 @@ export function SocketProvider({ children }) {
 
 	// emitters
 	const sendMessage = (messageData) => {
-        if (socket && socket.connected) {
-            socket.emit("send-message", messageData, (response) => {
-                if (response.ok) {
-                    console.log(response)
-                } else {
-                    console.error(response)
-                }
-            })	
-        }
+		if (socket && socket.connected) {
+			socket.emit("send-message", messageData, (response) => {
+				if (!response.ok) {
+					console.error(response)
+				}
+			})
+		}
 	}
 
 	const joinRoom = (room) => {
 		if (socket && socket.connected) {
 			socket.emit("join-room", room, (response) => {
-				if (response.ok) {
-                    console.log(response)
-                } else {
-                    console.error(response)
-                }
+				if (!response.ok) {
+					console.error(response)
+				}
 			})
 		}
 	}
 
-    const leaveRoom = (room) => {
-        if (socket && socket.connected) {
+	const leaveRoom = (room) => {
+		if (socket && socket.connected) {
 			socket.emit("leave-room", room, (response) => {
-				if (response.ok) {
-                    console.log(response)
-                } else {
-                    console.error(response)
-                }
+				if (!response.ok) {
+					console.error(response)
+				}
 			})
 		}
-    }
+	}
 
-    const read = (readData) => {
-        if (socket && socket.connected) {
-            socket.emit("read", readData, (response) => {
-                if (response.ok) {
-                    console.log(response)
-                } else {
-                    console.error(response)
-                }
-            })
-        }
-    }
+	const read = (readData) => {
+		if (socket && socket.connected) {
+			socket.emit("read", readData, (response) => {
+				if (!response.ok) {
+					console.error(response)
+				}
+			})
+		}
+	}
 
 	return (
 		<SocketContext.Provider

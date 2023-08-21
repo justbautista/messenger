@@ -31,7 +31,9 @@ export default function SignUpPage() {
 				className="p-10 border-2 border-solid border-slate-200 rounded-xl"
 				onSubmit={handleSubmit}
 			>
-				<h1 className="text-center text-3xl font-bold mb-10">Sign Up</h1>
+				<h1 className="text-center text-3xl font-bold mb-10">
+					Sign Up
+				</h1>
 				<div className="flex flex-col mb-2">
 					<label
 						className="text-sm font-semibold mb-1"

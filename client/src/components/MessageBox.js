@@ -7,10 +7,7 @@ import { useAuth } from "../contexts/AuthContext"
 import { formatDate } from "../helpers/helpers"
 import LoaderPage from "./LoaderPage"
 
-export default function MessageBox({
-	responsiveChatList,
-	setToggleChatList,
-}) {
+export default function MessageBox({ responsiveChatList, setToggleChatList }) {
 	const { username } = useAuth()
 	const {
 		selectedChat,
@@ -44,18 +41,13 @@ export default function MessageBox({
 					)
 				}
 
-				// if no chat in messageStore, fetch it and add to messageStore and update currentMessages
+				// if no chat in messageStore, fetch it and update currentMessages
 				if (!messageStore[selectedChat]) {
 					const response = await api.get(
 						`/chats/${selectedChat}/messages`,
 						{ params: { msgsLoaded: 0 } }
 					)
 					console.log("not in messageStore, fetch")
-					updateMessageStore(
-						selectedChat,
-						response.data["messages"],
-						response.data["chatName"]
-					)
 					setCurrentMessages({
 						chatId: selectedChat,
 						chatName: response.data["chatName"],
@@ -106,7 +98,7 @@ export default function MessageBox({
 
 	useEffect(() => {
 		if (socket) {
-			// here should just add to currentMessages only
+			// add newly received messages to currentMessages
 			socket.on("receive-message", (receivedMessageData) => {
 				if (receivedMessageData["room"] === selectedChat) {
 					setCurrentMessages((prev) => ({
@@ -191,10 +183,19 @@ export default function MessageBox({
 	}
 
 	return (
-		<div className={responsiveChatList ? "col-span-3 xl:col-span-3 flex flex-col overflow-y-hidden" : "col-span-2 xl:col-span-3 flex flex-col overflow-y-hidden"}>
+		<div
+			className={
+				responsiveChatList
+					? "col-span-3 xl:col-span-3 flex flex-col overflow-y-hidden"
+					: "col-span-2 xl:col-span-3 flex flex-col overflow-y-hidden"
+			}
+		>
 			<div className="p-5 border-b flex flex-row gap-2">
 				{responsiveChatList && (
-					<button className="text-red-400 hover:text-red-600" onClick={() => setToggleChatList(true)}>
+					<button
+						className="text-red-400 hover:text-red-600"
+						onClick={() => setToggleChatList(true)}
+					>
 						<svg
 							className="h-6 w-6"
 							width="24"

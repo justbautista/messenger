@@ -8,10 +8,10 @@ import { AuthProvider } from "./contexts/AuthContext"
 const root = ReactDOM.createRoot(document.getElementById("root"))
 root.render(
 	<React.StrictMode>
-        <AuthProvider>
-            <ChatProvider>
-                <App />
-            </ChatProvider>
-        </AuthProvider>
+		<AuthProvider>
+			<ChatProvider>
+				<App />
+			</ChatProvider>
+		</AuthProvider>
 	</React.StrictMode>
 )
