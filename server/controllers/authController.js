@@ -10,6 +10,12 @@ const {
 const signUp = async (req, res) => {
 	try {
 		const { username, password } = req.body
+		if (username === "" || password === "") {
+			return res
+				.status(401)
+				.send(generateResponse(false, "Invalid credentials"))
+		}
+
 		const userExists = await User.exists({ username: username })
 
 		if (userExists) {
@@ -38,6 +44,12 @@ const signUp = async (req, res) => {
 const login = async (req, res) => {
 	try {
 		const { username, password } = req.body
+		if (username === "" || password === "") {
+			return res
+				.status(401)
+				.send(generateResponse(false, "Invalid credentials"))
+		}
+
 		const user = await User.findOne({ username: username })
 
 		if (!user) {

@@ -7,11 +7,17 @@ import { useAuth } from "../contexts/AuthContext"
 export default function LoginPage() {
 	const { setIsLoggedIn, username, setUsername } = useAuth()
 	const [password, setPassword] = useState("")
+	const [loginError, setLoginError] = useState()
 	const navigate = useNavigate()
 
 	const handleSubmit = async (event) => {
 		event.preventDefault()
 		try {
+			if (password === "" || username === "") {
+				setLoginError("Please enter a username and a password")
+				return
+			}
+
 			await api.post("/auth/login", {
 				username: username,
 				password: password,
@@ -21,6 +27,7 @@ export default function LoginPage() {
 			setIsLoggedIn(true)
 			navigate("/")
 		} catch (err) {
+			setLoginError(err.response.data["message"])
 			console.error(generateAxiosError(err))
 		}
 	}
@@ -33,6 +40,11 @@ export default function LoginPage() {
 			>
 				<h1 className="text-center text-3xl font-bold mb-10">Login</h1>
 				<div className="flex flex-col mb-2">
+					{loginError && (
+						<p className="w-64 mb-2 text-sm text-red-600 p-2 rounded-sm bg-red-200 ring ring-red-600">
+							{loginError}
+						</p>
+					)}
 					<label
 						className="text-sm font-semibold mb-1"
 						htmlFor="username"

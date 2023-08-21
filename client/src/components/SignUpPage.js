@@ -7,11 +7,17 @@ import { useAuth } from "../contexts/AuthContext"
 export default function SignUpPage() {
 	const { setIsLoggedIn, username, setUsername } = useAuth()
 	const [password, setPassword] = useState("")
+	const [signUpError, setSignUpError] = useState()
 	const navigate = useNavigate()
 
 	const handleSubmit = async (event) => {
 		event.preventDefault()
 		try {
+			if (password === "" || username === "") {
+				setSignUpError("Please enter a username and a password")
+				return
+			}
+
 			await api.post("/auth/signUp", {
 				username: username,
 				password: password,
@@ -21,6 +27,7 @@ export default function SignUpPage() {
 			setIsLoggedIn(true)
 			navigate("/")
 		} catch (err) {
+			setSignUpError(err.response.data["message"])
 			console.error(generateAxiosError(err))
 		}
 	}
@@ -35,6 +42,11 @@ export default function SignUpPage() {
 					Sign Up
 				</h1>
 				<div className="flex flex-col mb-2">
+					{signUpError && (
+						<p className="w-64 mb-2 text-sm text-red-600 p-2 rounded-sm bg-red-200 ring ring-red-600">
+							{signUpError}
+						</p>
+					)}
 					<label
 						className="text-sm font-semibold mb-1"
 						htmlFor="username"
