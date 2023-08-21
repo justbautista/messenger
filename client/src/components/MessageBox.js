@@ -7,7 +7,10 @@ import { useAuth } from "../contexts/AuthContext"
 import { formatDate } from "../helpers/helpers"
 import LoaderPage from "./LoaderPage"
 
-export default function MessageBox() {
+export default function MessageBox({
+	responsiveChatList,
+	setToggleChatList,
+}) {
 	const { username } = useAuth()
 	const {
 		selectedChat,
@@ -65,13 +68,7 @@ export default function MessageBox() {
 							`/chats/${selectedChat}/messages`,
 							{ params: { msgsLoaded: 0 } }
 						)
-						// TODO: maybe take out msgs loaded for this
-						console.log("new messages from chat")
-						// updateMessageStore(
-						// 	selectedChat,
-						// 	response.data["messages"],
-						//     response.data["chatName"]
-						// )
+
 						setCurrentMessages({
 							chatId: selectedChat,
 							chatName: response.data["chatName"],
@@ -194,11 +191,31 @@ export default function MessageBox() {
 	}
 
 	return (
-		<div className="col-span-2 flex flex-col overflow-y-hidden">
-			<div className="p-5 border-b">
+		<div className={responsiveChatList ? "col-span-3 xl:col-span-3 flex flex-col overflow-y-hidden" : "col-span-2 xl:col-span-3 flex flex-col overflow-y-hidden"}>
+			<div className="p-5 border-b flex flex-row gap-2">
+				{responsiveChatList && (
+					<button className="text-red-400 hover:text-red-600" onClick={() => setToggleChatList(true)}>
+						<svg
+							className="h-6 w-6"
+							width="24"
+							height="24"
+							viewBox="0 0 24 24"
+							strokeWidth="2"
+							stroke="currentColor"
+							fill="none"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							{" "}
+							<path stroke="none" d="M0 0h24v24H0z" />{" "}
+							<rect x="4" y="4" width="16" height="16" rx="2" />{" "}
+							<line x1="9" y1="4" x2="9" y2="20" />
+						</svg>
+					</button>
+				)}
 				<p className="font-bold">{currentMessages["chatName"]}</p>
 			</div>
-			<div className="overflow-y-scroll grow flex flex-col-reverse p-2 gap-2">
+			<div className="overflow-y-auto grow flex flex-col-reverse p-2 gap-2">
 				{currentMessages["messages"] ? (
 					currentMessages["messages"]["messages"].map((message) =>
 						username === message["senderUsername"] ? (
@@ -248,19 +265,21 @@ export default function MessageBox() {
 					)}
 			</div>
 			<div className="w-full p-2">
-				<input
-					className="transition ease-in-out w-full bg-slate-200 rounded-sm p-2 hover:ring hover:ring-slate-300 focus:outline-none focus:ring focus:ring-red-300"
-					type="text"
-					name="message"
-					value={message}
-					placeholder="Type your message here..."
-					onChange={(event) => {
-						setMessage(event.target.value)
-					}}
-					onKeyDown={(event) => {
-						event.key === "Enter" && send()
-					}}
-				/>
+				{currentMessages["messages"] && (
+					<input
+						className="transition ease-in-out w-full bg-slate-200 rounded-sm p-2 hover:ring hover:ring-slate-300 focus:outline-none focus:ring focus:ring-red-300"
+						type="text"
+						name="message"
+						value={message}
+						placeholder="Type your message here..."
+						onChange={(event) => {
+							setMessage(event.target.value)
+						}}
+						onKeyDown={(event) => {
+							event.key === "Enter" && send()
+						}}
+					/>
+				)}
 			</div>
 		</div>
 	)

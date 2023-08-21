@@ -6,16 +6,18 @@ import MessageBox from "./MessageBox"
 import ChatList from "./ChatList"
 import { SocketProvider } from "../contexts/SocketContext"
 import { useAuth } from "../contexts/AuthContext"
-import NewChatModal from "./NewChatModal"
 import { useChat } from "../contexts/ChatContext"
 
 export default function HomePage() {
 	const { setIsLoggedIn, setUsername, username } = useAuth()
-    const { showNewChatModal } = useChat()
+	const { setMessageStore } = useChat()
 	const [toggle, setToggle] = useState(false)
+	const [toggleChatList, setToggleChatList] = useState() // if responsiveness ia on, toggle chat list
+	const [responsiveChatList, setResponsiveChatList] = useState(false) // turn responseiveness on??
 	const userButtonRef = useRef(null)
 	const userDropdownRef = useRef(null)
 	const navigate = useNavigate()
+	const WIDTH_TO_TRIGGER_SLIDING_CHATLIST = 640
 
 	const logout = async (event) => {
 		event.preventDefault()
@@ -25,6 +27,7 @@ export default function HomePage() {
 			removeAccessToken()
 			setUsername("")
 			setIsLoggedIn(false)
+			setMessageStore([])
 			navigate("/login")
 		} catch (err) {
 			console.error(generateAxiosError(err))
@@ -43,16 +46,39 @@ export default function HomePage() {
 			}
 		}
 
-		document.addEventListener("mousedown", handleOutsideClick)
+		const handleResize = () => {
+			if (
+				window.innerWidth <= WIDTH_TO_TRIGGER_SLIDING_CHATLIST &&
+				!responsiveChatList
+			) {
+				setResponsiveChatList(true)
+			} else if (
+				window.innerWidth > WIDTH_TO_TRIGGER_SLIDING_CHATLIST &&
+				responsiveChatList
+			) {
+				setResponsiveChatList(false)
+			}
+		}
 
-		return () =>
+		if (
+			window.innerWidth <= WIDTH_TO_TRIGGER_SLIDING_CHATLIST &&
+			!responsiveChatList
+		) {
+			setResponsiveChatList(true)
+		}
+
+		document.addEventListener("mousedown", handleOutsideClick)
+		window.addEventListener("resize", handleResize)
+
+		return () => {
 			document.removeEventListener("mousedown", handleOutsideClick)
-	}, [])
+			window.removeEventListener("resize", handleResize)
+		}
+	}, [responsiveChatList])
 
 	return (
 		<SocketProvider>
 			<div className="h-screen flex flex-col">
-                {showNewChatModal && <NewChatModal />}
 				<div className="flex flex-row justify-between my-2 mx-4 items-center">
 					<h1 className="font-bold text-3xl">Messenger</h1>
 					<div className="relative inline-block text-left">
@@ -78,11 +104,11 @@ export default function HomePage() {
 										width="24"
 										height="24"
 										viewBox="0 0 24 24"
-										stroke-width="2"
+										strokeWidth="2"
 										stroke="currentColor"
 										fill="none"
-										stroke-linecap="round"
-										stroke-linejoin="round"
+										strokeLinecap="round"
+										strokeLinejoin="round"
 									>
 										{" "}
 										<path
@@ -97,9 +123,16 @@ export default function HomePage() {
 						)}
 					</div>
 				</div>
-				<div className="grow overflow-y-hidden grid grid-cols-3 divide-x border m-2 rounded-xl">
-					<ChatList />
-					<MessageBox />
+				<div className="grow relative overflow-hidden grid grid-cols-3 xl:grid-cols-4 divide-x border m-2 rounded-xl">
+					<ChatList
+						responsiveChatList={responsiveChatList}
+						toggleChatList={toggleChatList}
+						setToggleChatList={setToggleChatList}
+					/>
+					<MessageBox
+						responsiveChatList={responsiveChatList}
+						setToggleChatList={setToggleChatList}
+					/>
 				</div>
 			</div>
 		</SocketProvider>

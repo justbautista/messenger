@@ -4,7 +4,7 @@ import api from "../helpers/axiosConfig"
 import { generateAxiosError } from "../helpers/helpers"
 import { useAuth } from "../contexts/AuthContext"
 
-export default function NewChatModal() {
+export default function NewChatModal({ setChatList }) {
 	const { username } = useAuth()
 	const { setShowNewChatModal } = useChat()
 	const modalRef = useRef(null)
@@ -55,12 +55,23 @@ export default function NewChatModal() {
             if (addedUserList.length === 0) {
                 return
             }
+
+            const memberList = [...addedUserList, username]
     
-            await api.post("/chats", {
-                members: [...addedUserList, username],
+            const response = await api.post("/chats", {
+                members: memberList,
                 chatName: chatName,
             })
-    
+            
+            const newChat = {
+                chatName: chatName.trim() !== "" ? chatName : memberList.join(", "),
+                chatId: response.data["roomId"],
+                read: false,
+                updatedAt: new Date().toISOString(),
+                latestMessage: false
+            }
+
+            setChatList(prev => [newChat, ...prev])
             setShowNewChatModal(false)
         } catch (err) {
             console.error(generateAxiosError(err))
@@ -146,9 +157,9 @@ export default function NewChatModal() {
 										viewBox="0 0 24 24"
 										fill="none"
 										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
 									>
 										{" "}
 										<rect

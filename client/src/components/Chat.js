@@ -3,29 +3,37 @@ import { useChat } from "../contexts/ChatContext"
 import { useSocket } from "../contexts/SocketContext"
 import { useAuth } from "../contexts/AuthContext"
 import { formatDate } from "../helpers/helpers"
+import ContextMenu from "./ContextMenu"
 
-export default function Chat({ chat }) {
+export default function Chat({
+	chat,
+	chatList,
+	setChatList,
+	responsiveChatList,
+	setToggleChatList,
+}) {
 	const { username } = useAuth()
 	const {
 		selectedChat,
 		setSelectedChat,
 		setSessionReadTracker,
+		sessionReadTracker,
 		sentMessage,
 	} = useChat()
 	const { socket, read } = useSocket()
 	const [latestMessage, setLatestMessage] = useState(chat["latestMessage"])
 	const [readStatus, setReadStatus] = useState(chat["read"])
+	const [contextMenuPosition, setContextMenuPosition] = useState(null)
 
 	useEffect(() => {
 		if (socket) {
 			socket.on("latest-message", (receivedMessageData) => {
-                console.log("triggerd chat message receive")
 				// if message received is this chat
 				if (receivedMessageData["room"] === chat["chatId"]) {
-                    const msgDataWithTimestamp = {
-                        ...receivedMessageData,
-                        timeStamp: new Date().toISOString()
-                    }
+					const msgDataWithTimestamp = {
+						...receivedMessageData,
+						timeStamp: new Date().toISOString(),
+					}
 					setLatestMessage(msgDataWithTimestamp)
 
 					// is this chat selected
@@ -36,14 +44,11 @@ export default function Chat({ chat }) {
 						}
 
 						read(readData)
-						setReadStatus(true)
 						setSessionReadTracker((prev) => ({
 							...prev,
 							[chat.chatId]: true,
 						}))
 					} else {
-                        console.log("falsy")
-						setReadStatus(false)
 						setSessionReadTracker((prev) => ({
 							...prev,
 							[chat.chatId]: false,
@@ -62,26 +67,68 @@ export default function Chat({ chat }) {
 		}
 	}, [sentMessage])
 
+	useEffect(() => {
+		if (sessionReadTracker[chat["chatId"]]) {
+			setReadStatus(true)
+		} else {
+			setReadStatus(false)
+		}
+	}, [sessionReadTracker])
+
+	const handleContextMenu = (e) => {
+		e.preventDefault()
+		const rect = e.currentTarget.getBoundingClientRect()
+		const offsetX = e.clientX - rect.left
+		const offsetY = e.clientY - rect.top
+        setContextMenuPosition({ x: offsetX, y: offsetY })
+	}
+
+	const handleChatSelection = () => {
+		if (responsiveChatList) {
+			setToggleChatList(false)
+		}
+
+		setSelectedChat(chat["chatId"])
+	}
+
 	return (
 		<div
 			className={
 				selectedChat === chat["chatId"]
-					? "transition ease-in-out p-4 my-2 rounded-xl bg-red-400 text-white"
-					: "transition ease-in-out p-4 my-2 rounded-xl hover:bg-slate-200"
+					? "relative transition ease-in-out p-4 my-2 rounded-xl bg-red-400 text-white"
+					: "relative transition ease-in-out p-4 my-2 rounded-xl hover:bg-slate-200"
 			}
-			onClick={() => setSelectedChat(chat["chatId"])}
+			onClick={handleChatSelection}
+			onContextMenu={handleContextMenu}
 		>
-			<div className="grid grid-cols-3 gap-2">
+			<div className="flex flex-row justify-between items-center gap-2">
 				<p className="font-bold truncate col-span-2">
 					{chat["chatName"]}
 				</p>
-				<p className="justify-self-end">
-					{latestMessage ? formatDate(latestMessage["timeStamp"]) : "No messages"}
+				<p className="shrink-0">
+					{latestMessage
+						? formatDate(latestMessage["timeStamp"])
+						: formatDate(chat["updatedAt"])}
 				</p>
 			</div>
-			<p className="font-light pr-2 truncate">
-				{latestMessage["message"]}
-			</p>
+			<div className="flex flex-row items-center gap-2">
+				{!readStatus && (
+					<span className="shrink-0 rounded-full h-3 w-3 bg-red-600"></span>
+				)}
+				<p className="font-light pr-2 truncate">
+					{latestMessage["message"] || "No Messages"}
+				</p>
+			</div>
+			{contextMenuPosition && (
+				<ContextMenu
+					x={contextMenuPosition.x}
+					y={contextMenuPosition.y}
+					chat={chat}
+					chatList={chatList}
+					setChatList={setChatList}
+					setContextMenuPosition={setContextMenuPosition}
+				/>
+			)}
 		</div>
 	)
 }

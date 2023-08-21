@@ -30,6 +30,7 @@ export function ChatProvider({ children }) {
 				selectedChat,
 				setSelectedChat,
 				messageStore,
+                setMessageStore,
 				updateMessageStore,
 				sessionReadTracker,
 				setSessionReadTracker,

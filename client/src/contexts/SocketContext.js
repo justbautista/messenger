@@ -49,6 +49,18 @@ export function SocketProvider({ children }) {
 		}
 	}
 
+    const leaveRoom = (room) => {
+        if (socket && socket.connected) {
+			socket.emit("leave-room", room, (response) => {
+				if (response.ok) {
+                    console.log(response)
+                } else {
+                    console.error(response)
+                }
+			})
+		}
+    }
+
     const read = (readData) => {
         if (socket && socket.connected) {
             socket.emit("read", readData, (response) => {
@@ -63,7 +75,7 @@ export function SocketProvider({ children }) {
 
 	return (
 		<SocketContext.Provider
-			value={{ socket, sendMessage, joinRoom, read }}
+			value={{ socket, sendMessage, joinRoom, leaveRoom, read }}
 		>
 			{children}
 		</SocketContext.Provider>

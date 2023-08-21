@@ -1,11 +1,16 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import api from "../helpers/axiosConfig"
 import { generateAxiosError } from "../helpers/helpers"
 import { useChat } from "../contexts/ChatContext"
 import Chat from "./Chat"
 import { useSocket } from "../contexts/SocketContext"
+import NewChatModal from "./NewChatModal"
 
-export default function ChatList() {
+export default function ChatList({
+	responsiveChatList,
+	toggleChatList,
+	setToggleChatList,
+}) {
 	const [chatList, setChatList] = useState([])
 	const {
 		selectedChat,
@@ -13,8 +18,10 @@ export default function ChatList() {
 		setSessionReadTracker,
 		sentMessage,
 		setShowNewChatModal,
+		showNewChatModal,
 	} = useChat()
 	const { joinRoom } = useSocket()
+	const chatListRef = useRef(null)
 
 	useEffect(() => {
 		const getChatList = async () => {
@@ -29,21 +36,46 @@ export default function ChatList() {
 	}, [])
 
 	useEffect(() => {
-		if (chatList.length > 0 && !selectedChat) {
+		if (!responsiveChatList) {
+			return
+		}
+
+		const handleOutsideClick = (event) => {
+			if (
+				chatListRef.current &&
+				!chatListRef.current.contains(event.target) &&
+				toggleChatList
+			) {
+				setToggleChatList(false)
+			}
+		}
+
+		document.addEventListener("mousedown", handleOutsideClick)
+
+		return () =>
+			responsiveChatList &&
+			document.removeEventListener("mousedown", handleOutsideClick)
+	}, [responsiveChatList, toggleChatList])
+
+	useEffect(() => {
+		if (chatList.length > 0) {
 			setSelectedChat(chatList[0]["chatId"])
 
 			for (const chat of chatList) {
 				joinRoom(chat["chatId"])
 			}
-
+			console.log(chatList)
 			const createChatListTracker = chatList.reduce(
 				(chats, chat) => ({
 					...chats,
 					[chat.chatId]:
-						chatList[0]["chatId"] === chat.chatId ? true : false,
+						chatList[0]["chatId"] === chat.chatId
+							? true
+							: chat["read"],
 				}),
 				{}
 			)
+			console.log(createChatListTracker)
 			setSessionReadTracker(createChatListTracker)
 		}
 	}, [chatList])
@@ -71,18 +103,28 @@ export default function ChatList() {
 	}, [sentMessage])
 
 	return (
-		<div className="flex flex-col p-2 overflow-y-hidden">
+		<div
+			className={
+				responsiveChatList
+					? toggleChatList
+						? "h-full w-4/5 absolute flex flex-col p-2 overflow-y-hidden top-0 left-0 bg-white border-e shadow-2xl rounded-xl transition-all ease-in-out origin-left"
+						: "w-0 h-full absolute flex flex-col p-0 overflow-y-hidden top-0 left-0 bg-white border-e shadow-2xl rounded-xl transition-all ease-in-out origin-left"
+					: "cols-span-1 flex flex-col p-2 overflow-y-hidden"
+			}
+			ref={chatListRef}
+		>
+			{showNewChatModal && <NewChatModal setChatList={setChatList} />}
 			<div className="m-2">
 				<svg
 					className="h-6 w-6 hover:text-red-600 text-red-400"
 					width="24"
 					height="24"
 					viewBox="0 0 24 24"
-					stroke-width="2"
+					strokeWidth="2"
 					stroke="currentColor"
 					fill="none"
-					stroke-linecap="round"
-					stroke-linejoin="round"
+					strokeLinecap="round"
+					strokeLinejoin="round"
 					onClick={() => setShowNewChatModal(true)}
 				>
 					{" "}
@@ -91,11 +133,18 @@ export default function ChatList() {
 					<line x1="5" y1="12" x2="19" y2="12" />
 				</svg>
 			</div>
-            <div className="grow overflow-y-auto">
-                {chatList.map((chat) => (
-                    <Chat key={chat["chatId"]} chat={chat} />
-                ))}
-            </div>
+			<div className="grow overflow-y-auto">
+				{chatList.map((chat) => (
+					<Chat
+						key={chat["chatId"]}
+						chat={chat}
+						setChatList={setChatList}
+						chatList={chatList}
+						setToggleChatList={setToggleChatList}
+						responsiveChatList={responsiveChatList}
+					/>
+				))}
+			</div>
 		</div>
 	)
 }
