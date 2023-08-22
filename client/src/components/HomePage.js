@@ -10,7 +10,8 @@ import { useChat } from "../contexts/ChatContext"
 
 export default function HomePage() {
 	const { setIsLoggedIn, setUsername, username } = useAuth()
-	const { setMessageStore } = useChat()
+	const { setMessageStore, setSelectedChat, setSessionReadTracker } =
+		useChat()
 	const [toggle, setToggle] = useState(false)
 	const [toggleChatList, setToggleChatList] = useState() // if responsiveness is on, toggle chatList
 	const [responsiveChatList, setResponsiveChatList] = useState(false) // turn responsive chatList on/off
@@ -27,6 +28,8 @@ export default function HomePage() {
 			removeAccessToken()
 			setUsername("")
 			setIsLoggedIn(false)
+			setSelectedChat(null)
+			setSessionReadTracker({})
 			setMessageStore([])
 			navigate("/login")
 		} catch (err) {
