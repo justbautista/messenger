@@ -64,7 +64,7 @@ export default function ChatList({
 			for (const chat of chatList) {
 				joinRoom(chat["chatId"])
 			}
-			console.log(chatList)
+
 			const createChatListTracker = chatList.reduce(
 				(chats, chat) => ({
 					...chats,
@@ -75,8 +75,8 @@ export default function ChatList({
 				}),
 				{}
 			)
-			console.log(createChatListTracker)
-			setSessionReadTracker(createChatListTracker)
+
+            setSessionReadTracker(createChatListTracker)
 		}
 	}, [chatList])
 

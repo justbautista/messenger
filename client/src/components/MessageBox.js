@@ -33,7 +33,6 @@ export default function MessageBox({ responsiveChatList, setToggleChatList }) {
 					currentMessages["messages"] &&
 					currentMessages["messages"]["messages"].length > 0
 				) {
-					console.log("updates message store")
 					updateMessageStore(
 						currentMessages["chatId"],
 						currentMessages["messages"],
@@ -47,7 +46,7 @@ export default function MessageBox({ responsiveChatList, setToggleChatList }) {
 						`/chats/${selectedChat}/messages`,
 						{ params: { msgsLoaded: 0 } }
 					)
-					console.log("not in messageStore, fetch")
+
 					setCurrentMessages({
 						chatId: selectedChat,
 						chatName: response.data["chatName"],
@@ -68,7 +67,6 @@ export default function MessageBox({ responsiveChatList, setToggleChatList }) {
 						})
 					} else {
 						// if there is a chat and no new messages, fetch from messageStore
-						console.log("get from messageStore")
 						setCurrentMessages({
 							chatId: selectedChat,
 							chatName: messageStore[selectedChat]["chatName"],
