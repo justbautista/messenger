@@ -1,9 +1,9 @@
 
 # Messenger
 
-A messaging website built from scratch.
+A messaging website.
 
-**Link:** 
+**Link:** https://justbautista-messenger.onrender.com
 ## Tech Stack
 
 **Client:** React, Tailwind
