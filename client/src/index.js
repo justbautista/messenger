@@ -2,6 +2,8 @@ import React from "react"
 import ReactDOM from "react-dom/client"
 import "./index.css"
 import App from "./components/App"
+import Chat from "./components/Chat"
+import { generateAxiosError } from "./helpers/helpers"
 import { ChatProvider } from "./contexts/ChatContext"
 import { AuthProvider } from "./contexts/AuthContext"
 
