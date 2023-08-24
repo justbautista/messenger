@@ -21,6 +21,7 @@ export default function Chat({
 		sentMessage,
 	} = useChat()
 	const { socket, read } = useSocket()
+	const [touchTimer, setTouchTimer] = useState()
 	const [latestMessage, setLatestMessage] = useState(chat["latestMessage"])
 	const [readStatus, setReadStatus] = useState(chat["read"])
 	const [contextMenuPosition, setContextMenuPosition] = useState(null)
@@ -91,6 +92,23 @@ export default function Chat({
 		setSelectedChat(chat["chatId"])
 	}
 
+	const handleTouchStart = (e) => {
+		const timer = setTimeout(() => {
+			e.preventDefault()
+			setContextMenuPosition({
+				x: e.touches[0].clientX,
+				y: e.touches[0].clientY,
+			})
+		}, 500)
+
+		setTouchTimer(timer)
+	}
+
+	const handleTouchEnd = (e) => {
+        e.preventDefault()
+		clearTimeout(touchTimer)
+	}
+
 	return (
 		<div
 			className={
@@ -100,6 +118,8 @@ export default function Chat({
 			}
 			onClick={handleChatSelection}
 			onContextMenu={handleContextMenu}
+			onTouchStart={handleTouchStart}
+			onTouchEnd={handleTouchEnd}
 		>
 			<div className="flex flex-row justify-between items-center gap-2">
 				<p className="font-bold truncate col-span-2">

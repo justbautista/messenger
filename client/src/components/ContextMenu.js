@@ -44,8 +44,8 @@ export default function ContextMenu({
 
 	return (
 		<div
-			className="ring-black ring-1 ring-opacity-5 mt-2 z-10 p-2 rounded-md shadow-lg bg-white"
-			style={{ position: "absolute", left: x, top: y }}
+			className="ring-black ring-1 absolute ring-opacity-5 mt-2 z-10 p-2 rounded-md shadow-lg bg-white"
+			style={{ left: x, top: y }}
 			ref={menu}
 		>
 			<button

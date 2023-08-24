@@ -125,27 +125,36 @@ export default function MessageBox({ responsiveChatList, setToggleChatList }) {
 
 	const loadMoreMessages = async () => {
 		// if not all messages are loaded, fetch more from api
-		if (!currentMessages["messages"]["allMessagesLoaded"]) {
-			const response = await api.get(`/chats/${selectedChat}/messages`, {
-				params: {
-					msgsLoaded:
-						currentMessages["messages"]["totalMessagesLoaded"],
-				},
-			})
+		try {
+			if (!currentMessages["messages"]["allMessagesLoaded"]) {
+				const response = await api.get(
+					`/chats/${selectedChat}/messages`,
+					{
+						params: {
+							msgsLoaded:
+								currentMessages["messages"][
+									"totalMessagesLoaded"
+								],
+						},
+					}
+				)
 
-			setCurrentMessages((prev) => ({
-				...prev,
-				messages: {
-					allMessagesLoaded:
-						response.data["messages"]["allMessagesLoaded"],
-					totalMessagesLoaded:
-						response.data["messages"]["totalMessagesLoaded"],
-					messages: [
-						...prev["messages"]["messages"],
-						...response.data["messages"]["messages"],
-					],
-				},
-			}))
+				setCurrentMessages((prev) => ({
+					...prev,
+					messages: {
+						allMessagesLoaded:
+							response.data["messages"]["allMessagesLoaded"],
+						totalMessagesLoaded:
+							response.data["messages"]["totalMessagesLoaded"],
+						messages: [
+							...prev["messages"]["messages"],
+							...response.data["messages"]["messages"],
+						],
+					},
+				}))
+			}
+		} catch (err) {
+			console.error(generateAxiosError(err))
 		}
 	}
 
