@@ -1,7 +1,7 @@
 
 # Messenger
 
-A messaging website.
+A messaging website. I was thinking of a project to work on, and have been wanting to do something that works in real-time, so a messaging website came to mind. Learned a lot, like JWT authentication, cookies, refresh token rotation, message caching with Context API, and designing the system so all parts work and communicate nicely with each other.
 
 **Link:** https://justbautista-messenger.onrender.com
 ## Tech Stack
